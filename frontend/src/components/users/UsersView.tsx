@@ -34,21 +34,21 @@ export const UsersView: React.FC = () => {
 
     const merged = currentUser
       ? [
-          currentUser,
-          ...storedProfiles.filter(
-            (profile) =>
-              profile.email !== currentUser.email &&
-              (
-                !profile.campId ||
-                activeCampIds.has(profile.campId)
-              )
-          ),
-        ]
-      : storedProfiles.filter(
+        currentUser,
+        ...storedProfiles.filter(
           (profile) =>
-            !profile.campId ||
-            activeCampIds.has(profile.campId)
-        );
+            profile.email !== currentUser.email &&
+            (
+              !profile.campId ||
+              activeCampIds.has(profile.campId)
+            )
+        ),
+      ]
+      : storedProfiles.filter(
+        (profile) =>
+          !profile.campId ||
+          activeCampIds.has(profile.campId)
+      );
 
     setProfiles(merged);
   }, [camps, currentUser]);
@@ -138,9 +138,9 @@ export const UsersView: React.FC = () => {
           const assignedCamp =
             user.campId
               ? camps.find(
-                  (camp) =>
-                    camp.id === user.campId
-                )
+                (camp) =>
+                  camp.id === user.campId
+              )
               : undefined;
 
           /*
@@ -161,23 +161,22 @@ export const UsersView: React.FC = () => {
           /*
            * HQ photo
            */
-       const avatarUrl = isHQAdmin
-  ? hqAdminPhoto
-  : user.avatarUrl ||
-    (assignedCamp
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          `${assignedCamp.name} ${assignedCamp.code}`
-        )}&size=256&background=0f172a&color=ffffff&bold=true`
-      : '');
+          const avatarUrl = isHQAdmin
+            ? hqAdminPhoto
+            : user.avatarUrl ||
+            (assignedCamp
+              ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                `${assignedCamp.name} ${assignedCamp.code}`
+              )}&size=256&background=0f172a&color=ffffff&bold=true`
+              : '');
 
           return (
             <div
               key={user.id}
-              className={`relative p-6 transition-all ${
-                isActive
+              className={`relative p-6 transition-all ${isActive
                   ? 'bg-[#d9c89d] text-black shadow-2xl'
                   : 'bg-[#121212] border border-white/10 text-white hover:border-white/30'
-              }`}
+                }`}
             >
 
               {/* =================================================
@@ -209,11 +208,10 @@ export const UsersView: React.FC = () => {
               <div className="flex items-center gap-4 mb-4">
 
                 <div
-                  className={`w-12 h-12 border overflow-hidden shrink-0 ${
-                    isActive
+                  className={`w-12 h-12 border overflow-hidden shrink-0 ${isActive
                       ? 'border-black'
                       : 'border-white/20'
-                  }`}
+                    }`}
                 >
                   {avatarUrl ? (
                     <img
@@ -239,11 +237,10 @@ export const UsersView: React.FC = () => {
                   <div className="flex items-center gap-2">
 
                     <h3
-                      className={`font-black font-display uppercase tracking-tight text-base ${
-                        isActive
+                      className={`font-black font-display uppercase tracking-tight text-base ${isActive
                           ? 'text-black'
                           : 'text-white'
-                      }`}
+                        }`}
                     >
                       {user.name}
                     </h3>
@@ -257,21 +254,19 @@ export const UsersView: React.FC = () => {
                   </div>
 
                   <p
-                    className={`text-xs font-mono font-bold uppercase ${
-                      isActive
+                    className={`text-xs font-mono font-bold uppercase ${isActive
                         ? 'text-black/80'
                         : 'text-white/80'
-                    }`}
+                      }`}
                   >
                     {user.role}
                   </p>
 
                   <p
-                    className={`text-[10px] font-mono ${
-                      isActive
+                    className={`text-[10px] font-mono ${isActive
                         ? 'text-black/50'
                         : 'text-white/40'
-                    }`}
+                      }`}
                   >
                     {user.serviceId}
                   </p>
@@ -287,11 +282,10 @@ export const UsersView: React.FC = () => {
               {user.role === 'Logistics' &&
                 assignedCamp && (
                   <div
-                    className={`mb-4 border p-3 ${
-                      isActive
+                    className={`mb-4 border p-3 ${isActive
                         ? 'border-black/20'
                         : 'border-white/10'
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between gap-3 text-[10px] font-mono font-bold uppercase">
 
@@ -322,11 +316,10 @@ export const UsersView: React.FC = () => {
               ================================================= */}
 
               <div
-                className={`space-y-2 text-xs font-mono border-t pt-3 mb-5 ${
-                  isActive
+                className={`space-y-2 text-xs font-mono border-t pt-3 mb-5 ${isActive
                     ? 'border-black/10'
                     : 'border-white/10'
-                }`}
+                  }`}
               >
 
                 {/* RANK */}
@@ -397,11 +390,10 @@ export const UsersView: React.FC = () => {
 
               <button
                 onClick={logout}
-                className={`w-full py-2.5 text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer ${
-                  isActive
+                className={`w-full py-2.5 text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer ${isActive
                     ? 'bg-black text-white'
                     : 'bg-[#d9c89d] text-black hover:bg-[#c9b886] shadow-sm'
-                }`}
+                  }`}
               >
                 {isActive
                   ? 'Active Identity'
