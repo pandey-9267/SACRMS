@@ -178,17 +178,17 @@ interface AppContextType {
       | 'campName'
       | 'auditLog'
     >
- ) => Promise<void>;
+  ) => Promise<void>;
 
-updateSupplyRequestStatus: (
-  id: string,
-  status: SupplyRequestStatus,
-  details?: {
-    reason?: string;
-    carrier?: string;
-    eta?: string;
-  }
-) => Promise<void>;
+  updateSupplyRequestStatus: (
+    id: string,
+    status: SupplyRequestStatus,
+    details?: {
+      reason?: string;
+      carrier?: string;
+      eta?: string;
+    }
+  ) => Promise<void>;
 
   isAddResourceModalOpen: boolean;
   setIsAddResourceModalOpen: (open: boolean) => void;
@@ -244,7 +244,7 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token =
-   sessionStorage.getItem('sacrms_token');
+    sessionStorage.getItem('sacrms_token');
 
   const response = await fetch(
     `${API_BASE_URL}${path}`,
@@ -357,44 +357,44 @@ export const AppProvider: React.FC<{
   const [currentView, setCurrentView] =
     useState<ActiveView>('dashboard');
 
-const [selectedCampId, setSelectedCampIdState] =
-  useState<string>(() => {
-    const saved =
-      localStorage.getItem(
-        'sacrms_selected_camp'
+  const [selectedCampId, setSelectedCampIdState] =
+    useState<string>(() => {
+      const saved =
+        localStorage.getItem(
+          'sacrms_selected_camp'
+        );
+
+      return saved &&
+        /^[a-f\d]{24}$/i.test(saved)
+        ? saved
+        : '';
+    });
+
+  const setSelectedCampId = (campId: string) => {
+    setSelectedCampIdState(campId);
+
+    if (campId) {
+      localStorage.setItem(
+        'sacrms_selected_camp',
+        campId
       );
-
-    return saved &&
-      /^[a-f\d]{24}$/i.test(saved)
-      ? saved
-      : '';
-  });
-
-const setSelectedCampId = (campId: string) => {
-  setSelectedCampIdState(campId);
-
-  if (campId) {
-    localStorage.setItem(
-      'sacrms_selected_camp',
-      campId
-    );
-  }
-};
+    }
+  };
 
   const [currentUser, setCurrentUser] =
     useState<UserProfile | null>(() => {
       if (
-      !sessionStorage.getItem(
-  'sacrms_token'
-)
+        !sessionStorage.getItem(
+          'sacrms_token'
+        )
       ) {
         return null;
       }
 
       const saved =
- sessionStorage.getItem(
-  'sacrms_user'
-);
+        sessionStorage.getItem(
+          'sacrms_user'
+        );
 
       if (saved) {
         try {
@@ -666,110 +666,110 @@ const setSelectedCampId = (campId: string) => {
               >
             >('/camps');
 
-         const mappedCamps: Camp[] =
-  campData.map(
-    (camp) => ({
-      id: String(
-        camp._id
-      ),
+          const mappedCamps: Camp[] =
+            campData.map(
+              (camp) => ({
+                id: String(
+                  camp._id
+                ),
 
-      name: String(
-        camp.name
-      ),
+                name: String(
+                  camp.name
+                ),
 
-      type:
-        camp.type as Camp['type'],
+                type:
+                  camp.type as Camp['type'],
 
-      code: String(
-        camp.code
-      ),
+                code: String(
+                  camp.code
+                ),
 
-      personnel: Number(
-        camp.personnel || 0
-      ),
+                personnel: Number(
+                  camp.personnel || 0
+                ),
 
-      readinessScore:
-        camp.status ===
-          'Optimal'
-          ? 100
-          : camp.status ===
-            'Warning'
-            ? 60
-            : 30,
+                readinessScore:
+                  camp.status ===
+                    'Optimal'
+                    ? 100
+                    : camp.status ===
+                      'Warning'
+                      ? 60
+                      : 30,
 
-      location: String(
-        camp.location
-      ),
+                location: String(
+                  camp.location
+                ),
 
-      commander: String(
-        camp.commander
-      ),
+                commander: String(
+                  camp.commander
+                ),
 
-      status:
-        camp.status as Camp['status'],
+                status:
+                  camp.status as Camp['status'],
 
-      weather: String(
-        camp.weather ||
-        'No data'
-      ),
+                weather: String(
+                  camp.weather ||
+                  'No data'
+                ),
 
-      temperature: String(
-        camp.temperature ||
-        'N/A'
-      ),
+                temperature: String(
+                  camp.temperature ||
+                  'N/A'
+                ),
 
-      // Camp-specific settings
-      warningThreshold:
-        Number(
-          camp.warningThreshold ?? 45
-        ),
+                // Camp-specific settings
+                warningThreshold:
+                  Number(
+                    camp.warningThreshold ?? 45
+                  ),
 
-      criticalThreshold:
-        Number(
-          camp.criticalThreshold ?? 20
-        ),
+                criticalThreshold:
+                  Number(
+                    camp.criticalThreshold ?? 20
+                  ),
 
-      autoAlerts:
-        camp.autoAlerts ??
-        true,
+                autoAlerts:
+                  camp.autoAlerts ??
+                  true,
 
-      audioPings:
-        camp.audioPings ??
-        false,
-    })
-  );
+                audioPings:
+                  camp.audioPings ??
+                  false,
+              })
+            );
 
-setCamps(mappedCamps);
-         if (currentUser.role === 'Admin') {
-  const savedCampId =
-    localStorage.getItem(
-      'sacrms_selected_camp'
-    );
+          setCamps(mappedCamps);
+          if (currentUser.role === 'Admin') {
+            const savedCampId =
+              localStorage.getItem(
+                'sacrms_selected_camp'
+              );
 
-  const savedCampExists =
-    savedCampId &&
-    mappedCamps.some(
-      (camp) =>
-        camp.id === savedCampId
-    );
+            const savedCampExists =
+              savedCampId &&
+              mappedCamps.some(
+                (camp) =>
+                  camp.id === savedCampId
+              );
 
-  if (
-    savedCampExists &&
-    savedCampId !== selectedCampId
-  ) {
-    setSelectedCampId(
-      savedCampId
-    );
-  } else if (
-    !savedCampExists &&
-    !selectedCampId &&
-    mappedCamps[0]
-  ) {
-    setSelectedCampId(
-      mappedCamps[0].id
-    );
-  }
-}
+            if (
+              savedCampExists &&
+              savedCampId !== selectedCampId
+            ) {
+              setSelectedCampId(
+                savedCampId
+              );
+            } else if (
+              !savedCampExists &&
+              !selectedCampId &&
+              mappedCamps[0]
+            ) {
+              setSelectedCampId(
+                mappedCamps[0].id
+              );
+            }
+          }
 
           const campId =
             currentUser.role ===
@@ -1328,14 +1328,14 @@ setCamps(mappedCamps);
 
   useEffect(() => {
     if (currentUser) {
-  sessionStorage.setItem(
-  'sacrms_user',
-  JSON.stringify(currentUser)
-);
+      sessionStorage.setItem(
+        'sacrms_user',
+        JSON.stringify(currentUser)
+      );
     } else {
-    sessionStorage.removeItem(
-  'sacrms_user'
-);
+      sessionStorage.removeItem(
+        'sacrms_user'
+      );
     }
   }, [currentUser]);
 
@@ -1749,7 +1749,7 @@ setCamps(mappedCamps);
             task.status || ''
           ).toLowerCase();
 
-       
+
 
         if (!task.dueDate) {
           return;
@@ -2314,10 +2314,10 @@ setCamps(mappedCamps);
           token,
           user,
         }) => {
-    sessionStorage.setItem(
-  'sacrms_token',
-  token
-);
+          sessionStorage.setItem(
+            'sacrms_token',
+            token
+          );
 
           setCurrentUser(user);
 
@@ -2356,13 +2356,13 @@ setCamps(mappedCamps);
   // ============================================================
 
   const logout = () => {
-sessionStorage.removeItem(
-  'sacrms_user'
-);
+    sessionStorage.removeItem(
+      'sacrms_user'
+    );
 
-sessionStorage.removeItem(
-  'sacrms_token'
-);
+    sessionStorage.removeItem(
+      'sacrms_token'
+    );
 
     setCurrentUser(null);
 
@@ -2423,7 +2423,7 @@ sessionStorage.removeItem(
       'sacrms_profile_passwords'
     );
 
-    localStorage.removeItem(
+    sessionStorage.removeItem(
       'sacrms_user'
     );
 
@@ -3425,103 +3425,101 @@ sessionStorage.removeItem(
   // ACKNOWLEDGE ALERT
   // ============================================================
 
-const acknowledgeAlert = (
-  id: string
-) => {
-  if (
-    !hasRole(
-      'Admin',
-      'Logistics',
-      'Maintenance',
-      'Commander'
-    )
-  ) {
-    addToast(
-      'warning',
-      'Access Restricted',
-      'This role cannot acknowledge alerts.'
-    );
+  const acknowledgeAlert = (
+    id: string
+  ) => {
+    if (
+      !hasRole(
+        'Admin',
+        'Logistics',
+        'Maintenance',
+        'Commander'
+      )
+    ) {
+      addToast(
+        'warning',
+        'Access Restricted',
+        'This role cannot acknowledge alerts.'
+      );
 
-    return;
-  }
+      return;
+    }
 
-  const alertToAcknowledge =
-    alerts.find(
-      (alert) => alert.id === id
-    );
+    const alertToAcknowledge =
+      alerts.find(
+        (alert) => alert.id === id
+      );
 
-  if (!alertToAcknowledge) {
-    return;
-  }
+    if (!alertToAcknowledge) {
+      return;
+    }
 
-  // ============================================================
-  // RESOURCE ALERTS CANNOT BE ACKNOWLEDGED.
-  //
-  // They must disappear only when the actual resource
-  // problem is resolved.
-  // ============================================================
+    // ============================================================
+    // RESOURCE ALERTS CANNOT BE ACKNOWLEDGED.
+    //
+    // They must disappear only when the actual resource
+    // problem is resolved.
+    // ============================================================
 
-  if (
-    alertToAcknowledge.id.startsWith(
-      'auto-resource-'
-    )
-  ) {
-    addToast(
-      'warning',
-      'Action Required',
-      'Resource alerts cannot be dismissed. Resolve the stock issue through the resupply process.'
-    );
+    if (
+      alertToAcknowledge.id.startsWith(
+        'auto-resource-'
+      )
+    ) {
+      addToast(
+        'warning',
+        'Action Required',
+        'Resource alerts cannot be dismissed. Resolve the stock issue through the resupply process.'
+      );
 
-    return;
-  }
+      return;
+    }
 
-  // ============================================================
-  // MAINTENANCE COMPLETION ACKNOWLEDGEMENT
-  // ============================================================
+    // ============================================================
+    // MAINTENANCE COMPLETION ACKNOWLEDGEMENT
+    // ============================================================
 
-  const acknowledgedAlertIds =
-    new Set<string>(
-      JSON.parse(
-        localStorage.getItem(
-          `sacrms_acknowledged_alerts_${
-            currentUser?.id || 'guest'
-          }`
-        ) || '[]'
+    const acknowledgedAlertIds =
+      new Set<string>(
+        JSON.parse(
+          localStorage.getItem(
+            `sacrms_acknowledged_alerts_${currentUser?.id || 'guest'
+            }`
+          ) || '[]'
+        )
+      );
+
+    acknowledgedAlertIds.add(id);
+
+    localStorage.setItem(
+      `sacrms_acknowledged_alerts_${currentUser?.id || 'guest'
+      }`,
+      JSON.stringify(
+        Array.from(
+          acknowledgedAlertIds
+        )
       )
     );
 
-  acknowledgedAlertIds.add(id);
-
-  localStorage.setItem(
-    `sacrms_acknowledged_alerts_${
-      currentUser?.id || 'guest'
-    }`,
-    JSON.stringify(
-      Array.from(
-        acknowledgedAlertIds
-      )
-    )
-  );
-
-  setAlerts(
-    (prev) =>
-      prev.map(
-        (alert) =>
-          alert.id === id
-            ? {
+    setAlerts(
+      (prev) =>
+        prev.map(
+          (alert) =>
+            alert.id === id
+              ? {
                 ...alert,
                 acknowledged: true,
               }
-            : alert
-      )
-  );
+              : alert
+        )
+    );
 
-  addToast(
-    'info',
-    'Alert Acknowledged',
-    'Maintenance completion has been acknowledged by the camp.'
-  );
-};
+    addToast(
+      'info',
+      'Alert Acknowledged',
+      'Maintenance completion has been acknowledged by the camp.'
+    );
+  };
 
   // ============================================================
   // DISPATCH RESUPPLY
@@ -3856,320 +3854,320 @@ const acknowledgeAlert = (
   // SUPPLY REQUEST
   // ============================================================
 
-const submitSupplyRequest = async (
-  requestData: Omit<
-    SupplyRequest,
-    | 'id'
-    | 'status'
-    | 'createdAt'
-    | 'requestedBy'
-    | 'campId'
-    | 'campName'
-    | 'auditLog'
-  >
-) => {
-  if (!hasRole('Logistics')) {
-    addToast(
-      'warning',
-      'Access Restricted',
-      'Only camp-side Logistics personnel can submit supply requests.'
-    );
+  const submitSupplyRequest = async (
+    requestData: Omit<
+      SupplyRequest,
+      | 'id'
+      | 'status'
+      | 'createdAt'
+      | 'requestedBy'
+      | 'campId'
+      | 'campName'
+      | 'auditLog'
+    >
+  ) => {
+    if (!hasRole('Logistics')) {
+      addToast(
+        'warning',
+        'Access Restricted',
+        'Only camp-side Logistics personnel can submit supply requests.'
+      );
 
-    return;
-  }
+      return;
+    }
 
-  // ============================================================
-  // 1. FIND THE REAL RESOURCE FIRST
-  // ============================================================
+    // ============================================================
+    // 1. FIND THE REAL RESOURCE FIRST
+    // ============================================================
 
-  const matchingResource =
-    currentCampResources.find(
-      (resource) =>
-        normalizeResourceName(resource.name) ===
-        normalizeResourceName(
-          requestData.resourceName
-        ) &&
-        resource.category ===
+    const matchingResource =
+      currentCampResources.find(
+        (resource) =>
+          normalizeResourceName(resource.name) ===
+          normalizeResourceName(
+            requestData.resourceName
+          ) &&
+          resource.category ===
           requestData.category
-    );
-
-  // ============================================================
-  // 2. STOP IMMEDIATELY IF RESOURCE DOES NOT EXIST
-  // ============================================================
-
-  if (!matchingResource) {
-    addToast(
-      'error',
-      'Request Not Saved',
-      `The resource "${requestData.resourceName}" does not exist in ${currentCamp.name}. Select an existing camp resource.`
-    );
-
-    return;
-  }
-
-  // ============================================================
-  // 3. VALIDATE QUANTITY
-  // ============================================================
-
-  if (
-    requestData.quantity <= 0
-  ) {
-    addToast(
-      'error',
-      'Invalid Quantity',
-      'Request quantity must be greater than zero.'
-    );
-
-    return;
-  }
-
-  // ============================================================
-  // 4. USE THE ACTUAL RESOURCE DATA
-  // ============================================================
-
-  const createdAt =
-    new Date()
-      .toISOString()
-      .slice(0, 16)
-      .replace('T', ' ');
-
-  const newRequest:
-    SupplyRequest = {
-    ...requestData,
-
-    // Always use the actual inventory resource name.
-    resourceName:
-      matchingResource.name,
-
-    // Always use the actual inventory category.
-    category:
-      matchingResource.category,
-
-    // Use actual inventory unit.
-    unit:
-      matchingResource.unit,
-
-    id:
-      `req-${Date.now()}`,
-
-    campId:
-      currentCamp.id,
-
-    campName:
-      currentCamp.name,
-
-    status:
-      'Submitted',
-
-    requestedBy:
-      currentUser?.name ||
-      'Camp Logistics Cell',
-
-    createdAt,
-
-    auditLog: [
-      {
-        action:
-          'Submitted',
-
-        actor:
-          currentUser?.name ||
-          'Camp Logistics Cell',
-
-        timestamp:
-          createdAt,
-      },
-    ],
-  };
-
-  // ============================================================
-  // 5. SAVE TO MONGODB FIRST
-  // ============================================================
-
-  try {
-    const savedRequest =
-      await apiRequest<
-        Record<string, unknown>
-      >(
-        '/requests',
-        {
-          method: 'POST',
-
-          body: JSON.stringify({
-            resourceId:
-              matchingResource.id,
-
-            quantity:
-              requestData.quantity,
-
-            unit:
-              matchingResource.unit,
-
-            urgency:
-              requestData.urgency,
-
-            reason:
-              requestData.reason,
-          }),
-        }
       );
 
-    // ==========================================================
-    // 6. USE MONGODB ID
-    // ==========================================================
+    // ============================================================
+    // 2. STOP IMMEDIATELY IF RESOURCE DOES NOT EXIST
+    // ============================================================
 
-    const mongoRequestId =
-      String(
-        savedRequest._id ||
-          newRequest.id
+    if (!matchingResource) {
+      addToast(
+        'error',
+        'Request Not Saved',
+        `The resource "${requestData.resourceName}" does not exist in ${currentCamp.name}. Select an existing camp resource.`
       );
 
-    const persistedRequest:
+      return;
+    }
+
+    // ============================================================
+    // 3. VALIDATE QUANTITY
+    // ============================================================
+
+    if (
+      requestData.quantity <= 0
+    ) {
+      addToast(
+        'error',
+        'Invalid Quantity',
+        'Request quantity must be greater than zero.'
+      );
+
+      return;
+    }
+
+    // ============================================================
+    // 4. USE THE ACTUAL RESOURCE DATA
+    // ============================================================
+
+    const createdAt =
+      new Date()
+        .toISOString()
+        .slice(0, 16)
+        .replace('T', ' ');
+
+    const newRequest:
       SupplyRequest = {
-      ...newRequest,
+      ...requestData,
 
-      id:
-        mongoRequestId,
-    };
-
-    // ==========================================================
-    // 7. ONLY NOW UPDATE FRONTEND STATE
-    // ==========================================================
-
-    setSupplyRequests(
-      (prev) => [
-        persistedRequest,
-        ...prev,
-      ]
-    );
-
-    // ==========================================================
-    // 8. CREATE HQ NOTIFICATION
-    // ==========================================================
-
-    const alertCategory:
-      AlertItem['category'] =
-      matchingResource.category;
-
-    const alertSeverity:
-      AlertItem['severity'] =
-      requestData.urgency ===
-        'Critical'
-        ? 'High'
-        : requestData.urgency ===
-          'Urgent'
-          ? 'Medium'
-          : 'Low';
-
-    const adminAlert:
-      AlertItem = {
-      id:
-        `alert-${mongoRequestId}`,
-
-      title:
-        'New Camp Requirement Submitted',
-
-      description:
-        `${currentCamp.name} requested ${requestData.quantity.toLocaleString()} ${matchingResource.unit} of ${matchingResource.name}. Reason: ${requestData.reason}`,
-
-      category:
-        alertCategory,
-
-      severity:
-        alertSeverity,
-
-      campId:
-        currentCamp.id,
-
-      campName:
-        currentCamp.name,
-
-      timestamp:
-        'Just now',
-
-      acknowledged:
-        false,
-
-      actionRequired:
-        'Review and approve or reject the requirement from the HQ Supply Requests queue.',
-    };
-
-    setAlerts(
-      (prev) => [
-        adminAlert,
-        ...prev,
-      ]
-    );
-
-    // ==========================================================
-    // 9. CAMP PENDING REQUEST
-    // ==========================================================
-
-    const pendingRequest:
-      PendingCampRequest = {
-      id:
-        mongoRequestId,
-
-      campId:
-        currentCamp.id,
-
-      campName:
-        currentCamp.name,
-
-      requestedBy:
-        newRequest.requestedBy,
-
+      // Always use the actual inventory resource name.
       resourceName:
         matchingResource.name,
 
-      quantity:
-        requestData.quantity,
+      // Always use the actual inventory category.
+      category:
+        matchingResource.category,
 
+      // Use actual inventory unit.
       unit:
         matchingResource.unit,
 
-      urgency:
-        requestData.urgency,
+      id:
+        `req-${Date.now()}`,
 
-      reason:
-        requestData.reason,
+      campId:
+        currentCamp.id,
+
+      campName:
+        currentCamp.name,
+
+      status:
+        'Submitted',
+
+      requestedBy:
+        currentUser?.name ||
+        'Camp Logistics Cell',
+
+      createdAt,
+
+      auditLog: [
+        {
+          action:
+            'Submitted',
+
+          actor:
+            currentUser?.name ||
+            'Camp Logistics Cell',
+
+          timestamp:
+            createdAt,
+        },
+      ],
     };
 
-    setPendingCampRequests(
-      (prev) => [
-        pendingRequest,
-        ...prev,
-      ]
-    );
+    // ============================================================
+    // 5. SAVE TO MONGODB FIRST
+    // ============================================================
 
-    // ==========================================================
-    // 10. SUCCESS
-    // ==========================================================
+    try {
+      const savedRequest =
+        await apiRequest<
+          Record<string, unknown>
+        >(
+          '/requests',
+          {
+            method: 'POST',
 
-    addToast(
-      'success',
-      'Requirement Submitted',
-      `${matchingResource.name} request sent from ${currentCamp.name}.`
-    );
+            body: JSON.stringify({
+              resourceId:
+                matchingResource.id,
 
-    addToast(
-      'info',
-      'HQ Notification',
-      `New requirement sent to HQ for review. ${currentCamp.name} is awaiting approval.`
-    );
+              quantity:
+                requestData.quantity,
 
-  } catch (error) {
+              unit:
+                matchingResource.unit,
 
-    addToast(
-      'error',
-      'Request Save Failed',
-      error instanceof Error
-        ? error.message
-        : 'Unable to save request to MongoDB.'
-    );
+              urgency:
+                requestData.urgency,
 
-  }
-};
+              reason:
+                requestData.reason,
+            }),
+          }
+        );
+
+      // ==========================================================
+      // 6. USE MONGODB ID
+      // ==========================================================
+
+      const mongoRequestId =
+        String(
+          savedRequest._id ||
+          newRequest.id
+        );
+
+      const persistedRequest:
+        SupplyRequest = {
+        ...newRequest,
+
+        id:
+          mongoRequestId,
+      };
+
+      // ==========================================================
+      // 7. ONLY NOW UPDATE FRONTEND STATE
+      // ==========================================================
+
+      setSupplyRequests(
+        (prev) => [
+          persistedRequest,
+          ...prev,
+        ]
+      );
+
+      // ==========================================================
+      // 8. CREATE HQ NOTIFICATION
+      // ==========================================================
+
+      const alertCategory:
+        AlertItem['category'] =
+        matchingResource.category;
+
+      const alertSeverity:
+        AlertItem['severity'] =
+        requestData.urgency ===
+          'Critical'
+          ? 'High'
+          : requestData.urgency ===
+            'Urgent'
+            ? 'Medium'
+            : 'Low';
+
+      const adminAlert:
+        AlertItem = {
+        id:
+          `alert-${mongoRequestId}`,
+
+        title:
+          'New Camp Requirement Submitted',
+
+        description:
+          `${currentCamp.name} requested ${requestData.quantity.toLocaleString()} ${matchingResource.unit} of ${matchingResource.name}. Reason: ${requestData.reason}`,
+
+        category:
+          alertCategory,
+
+        severity:
+          alertSeverity,
+
+        campId:
+          currentCamp.id,
+
+        campName:
+          currentCamp.name,
+
+        timestamp:
+          'Just now',
+
+        acknowledged:
+          false,
+
+        actionRequired:
+          'Review and approve or reject the requirement from the HQ Supply Requests queue.',
+      };
+
+      setAlerts(
+        (prev) => [
+          adminAlert,
+          ...prev,
+        ]
+      );
+
+      // ==========================================================
+      // 9. CAMP PENDING REQUEST
+      // ==========================================================
+
+      const pendingRequest:
+        PendingCampRequest = {
+        id:
+          mongoRequestId,
+
+        campId:
+          currentCamp.id,
+
+        campName:
+          currentCamp.name,
+
+        requestedBy:
+          newRequest.requestedBy,
+
+        resourceName:
+          matchingResource.name,
+
+        quantity:
+          requestData.quantity,
+
+        unit:
+          matchingResource.unit,
+
+        urgency:
+          requestData.urgency,
+
+        reason:
+          requestData.reason,
+      };
+
+      setPendingCampRequests(
+        (prev) => [
+          pendingRequest,
+          ...prev,
+        ]
+      );
+
+      // ==========================================================
+      // 10. SUCCESS
+      // ==========================================================
+
+      addToast(
+        'success',
+        'Requirement Submitted',
+        `${matchingResource.name} request sent from ${currentCamp.name}.`
+      );
+
+      addToast(
+        'info',
+        'HQ Notification',
+        `New requirement sent to HQ for review. ${currentCamp.name} is awaiting approval.`
+      );
+
+    } catch (error) {
+
+      addToast(
+        'error',
+        'Request Save Failed',
+        error instanceof Error
+          ? error.message
+          : 'Unable to save request to MongoDB.'
+      );
+
+    }
+  };
 
   // ============================================================
   // CLEAR PENDING REQUEST
@@ -4191,217 +4189,217 @@ const submitSupplyRequest = async (
   // UPDATE SUPPLY REQUEST STATUS
   // ============================================================
 
-const updateSupplyRequestStatus = async (
-  id: string,
-  status: SupplyRequestStatus,
-  details: {
-    reason?: string;
-    carrier?: string;
-    eta?: string;
-  } = {}
-) => {
-  const canProcessAsAdmin =
-    hasRole('Admin');
+  const updateSupplyRequestStatus = async (
+    id: string,
+    status: SupplyRequestStatus,
+    details: {
+      reason?: string;
+      carrier?: string;
+      eta?: string;
+    } = {}
+  ) => {
+    const canProcessAsAdmin =
+      hasRole('Admin');
 
-  const request =
-    supplyRequests.find(
-      (item) => item.id === id
-    );
+    const request =
+      supplyRequests.find(
+        (item) => item.id === id
+      );
 
-  if (!request) {
-    addToast(
-      'error',
-      'Request Not Found',
-      'The selected supply request no longer exists in the queue.'
-    );
+    if (!request) {
+      addToast(
+        'error',
+        'Request Not Found',
+        'The selected supply request no longer exists in the queue.'
+      );
 
-    return;
-  }
-
-  // ============================================================
-  // VALIDATE STATUS TRANSITION
-  // ============================================================
-
-  const validAdminTransition =
-    canProcessAsAdmin &&
-    (
-      (request.status === 'Submitted' &&
-        (status === 'Approved' ||
-          status === 'Rejected')) ||
-
-      (request.status === 'Approved' &&
-        (status === 'In Transit' ||
-          status === 'Rejected'))
-    );
-
-  const canConfirmAsCamp =
-    hasRole('Logistics') &&
-    request.campId ===
-      currentCamp.id &&
-    request.status === 'In Transit' &&
-    status === 'Received';
-
-  if (
-    !validAdminTransition &&
-    !canConfirmAsCamp
-  ) {
-    // If the requested status is already the current
-    // status, do nothing. This prevents duplicate clicks
-    // from showing a false error.
-    if (
-      request.status === status
-    ) {
       return;
     }
 
-    addToast(
-      'warning',
-      'Invalid Status Transition',
-      `${request.status} cannot be changed to ${status}.`
-    );
+    // ============================================================
+    // VALIDATE STATUS TRANSITION
+    // ============================================================
 
-    return;
-  }
+    const validAdminTransition =
+      canProcessAsAdmin &&
+      (
+        (request.status === 'Submitted' &&
+          (status === 'Approved' ||
+            status === 'Rejected')) ||
 
-  // ============================================================
-  // ACTOR + TIMESTAMP
-  // ============================================================
-
-  const actor =
-    currentUser?.name ||
-    'Central Logistics';
-
-  const timestamp =
-    new Date()
-      .toISOString()
-      .slice(0, 16)
-      .replace('T', ' ');
-
-  // ============================================================
-  // SAVE STATUS TO MONGODB FIRST
-  // ============================================================
-
-  try {
-    const savedRequest =
-      await apiRequest<
-        Record<string, unknown>
-      >(
-        `/requests/${encodeURIComponent(
-          id
-        )}/status`,
-        {
-          method: 'PATCH',
-
-          body: JSON.stringify({
-            status,
-
-            carrier:
-              details.carrier,
-
-            eta:
-              details.eta,
-
-            rejectionReason:
-              details.reason,
-          }),
-        }
+        (request.status === 'Approved' &&
+          (status === 'In Transit' ||
+            status === 'Rejected'))
       );
 
-    // ==========================================================
-    // DISPATCH
-    //
-    // There is NO separate HQ inventory.
-    // Dispatch only changes:
-    //
-    // Approved → In Transit
-    //
-    // Stock is added only when the camp confirms receipt.
-    // ==========================================================
-
-    let dispatchedSourceResourceId:
-      string | undefined;
+    const canConfirmAsCamp =
+      hasRole('Logistics') &&
+      request.campId ===
+      currentCamp.id &&
+      request.status === 'In Transit' &&
+      status === 'Received';
 
     if (
-      status === 'In Transit' &&
-      canProcessAsAdmin
+      !validAdminTransition &&
+      !canConfirmAsCamp
     ) {
-      dispatchedSourceResourceId =
-        request.sourceResourceId;
+      // If the requested status is already the current
+      // status, do nothing. This prevents duplicate clicks
+      // from showing a false error.
+      if (
+        request.status === status
+      ) {
+        return;
+      }
+
+      addToast(
+        'warning',
+        'Invalid Status Transition',
+        `${request.status} cannot be changed to ${status}.`
+      );
+
+      return;
     }
 
-    // ==========================================================
-    // RECEIVED
-    //
-    // Add the requested quantity to the camp resource
-    // only after the camp confirms physical receipt.
-    // ==========================================================
+    // ============================================================
+    // ACTOR + TIMESTAMP
+    // ============================================================
 
-    if (
-      status === 'Received' &&
-      canConfirmAsCamp
-    ) {
-      const destination =
-        resources.find(
-          (item) =>
-            item.campId ===
-              request.campId &&
-            item.category ===
-              request.category &&
-            normalizeResourceName(
-              item.name
-            ) ===
-              normalizeResourceName(
-                request.resourceName
-              )
-        );
+    const actor =
+      currentUser?.name ||
+      'Central Logistics';
 
-      if (destination) {
-        const newStock =
-          Math.min(
-            destination.maxCapacity,
-            destination.currentStock +
-              request.quantity
-          );
+    const timestamp =
+      new Date()
+        .toISOString()
+        .slice(0, 16)
+        .replace('T', ' ');
 
-        const newStatus =
-          calculateStatus(
-            newStock,
-            destination.minLevel,
-            destination.maxCapacity
-          );
+    // ============================================================
+    // SAVE STATUS TO MONGODB FIRST
+    // ============================================================
 
-        const newEstDays =
-          calculateEstDays(
-            newStock,
-            destination.burnRatePerPersonPerDay,
-            getCampPersonnel(
-              destination.campId
-            )
-          );
-
-        // Update MongoDB resource
-        await apiRequest(
-          `/resources/${encodeURIComponent(
-            destination.id
-          )}`,
+    try {
+      const savedRequest =
+        await apiRequest<
+          Record<string, unknown>
+        >(
+          `/requests/${encodeURIComponent(
+            id
+          )}/status`,
           {
             method: 'PATCH',
 
             body: JSON.stringify({
-              currentStock:
-                newStock,
+              status,
+
+              carrier:
+                details.carrier,
+
+              eta:
+                details.eta,
+
+              rejectionReason:
+                details.reason,
             }),
           }
         );
 
-        // Update frontend resource
-        setResources(
-          (prev) =>
-            prev.map(
-              (item) =>
-                item.id ===
-                destination.id
-                  ? {
+      // ==========================================================
+      // DISPATCH
+      //
+      // There is NO separate HQ inventory.
+      // Dispatch only changes:
+      //
+      // Approved → In Transit
+      //
+      // Stock is added only when the camp confirms receipt.
+      // ==========================================================
+
+      let dispatchedSourceResourceId:
+        string | undefined;
+
+      if (
+        status === 'In Transit' &&
+        canProcessAsAdmin
+      ) {
+        dispatchedSourceResourceId =
+          request.sourceResourceId;
+      }
+
+      // ==========================================================
+      // RECEIVED
+      //
+      // Add the requested quantity to the camp resource
+      // only after the camp confirms physical receipt.
+      // ==========================================================
+
+      if (
+        status === 'Received' &&
+        canConfirmAsCamp
+      ) {
+        const destination =
+          resources.find(
+            (item) =>
+              item.campId ===
+              request.campId &&
+              item.category ===
+              request.category &&
+              normalizeResourceName(
+                item.name
+              ) ===
+              normalizeResourceName(
+                request.resourceName
+              )
+          );
+
+        if (destination) {
+          const newStock =
+            Math.min(
+              destination.maxCapacity,
+              destination.currentStock +
+              request.quantity
+            );
+
+          const newStatus =
+            calculateStatus(
+              newStock,
+              destination.minLevel,
+              destination.maxCapacity
+            );
+
+          const newEstDays =
+            calculateEstDays(
+              newStock,
+              destination.burnRatePerPersonPerDay,
+              getCampPersonnel(
+                destination.campId
+              )
+            );
+
+          // Update MongoDB resource
+          await apiRequest(
+            `/resources/${encodeURIComponent(
+              destination.id
+            )}`,
+            {
+              method: 'PATCH',
+
+              body: JSON.stringify({
+                currentStock:
+                  newStock,
+              }),
+            }
+          );
+
+          // Update frontend resource
+          setResources(
+            (prev) =>
+              prev.map(
+                (item) =>
+                  item.id ===
+                    destination.id
+                    ? {
                       ...item,
 
                       currentStock:
@@ -4416,37 +4414,37 @@ const updateSupplyRequestStatus = async (
                       lastRestocked:
                         timestamp,
                     }
-                  : item
-            )
-        );
+                    : item
+              )
+          );
+        }
       }
-    }
 
-    // ==========================================================
-    // UPDATE LOCAL REQUEST STATE
-    // ONLY AFTER MONGODB SUCCESS
-    // ==========================================================
+      // ==========================================================
+      // UPDATE LOCAL REQUEST STATE
+      // ONLY AFTER MONGODB SUCCESS
+      // ==========================================================
 
-    const auditEntry:
-      SupplyRequestAuditEntry = {
-      action:
-        status,
+      const auditEntry:
+        SupplyRequestAuditEntry = {
+        action:
+          status,
 
-      actor,
+        actor,
 
-      timestamp,
+        timestamp,
 
-      note:
-        details.reason ||
-        details.carrier,
-    };
+        note:
+          details.reason ||
+          details.carrier,
+      };
 
-    setSupplyRequests(
-      (prev) =>
-        prev.map(
-          (requestItem) =>
-            requestItem.id === id
-              ? {
+      setSupplyRequests(
+        (prev) =>
+          prev.map(
+            (requestItem) =>
+              requestItem.id === id
+                ? {
                   ...requestItem,
 
                   // Prefer the server's status when available.
@@ -4472,13 +4470,13 @@ const updateSupplyRequestStatus = async (
                   sourceCampId:
                     status === 'In Transit'
                       ? currentUser?.campId ||
-                        requestItem.sourceCampId
+                      requestItem.sourceCampId
                       : requestItem.sourceCampId,
 
                   sourceResourceId:
                     status === 'In Transit'
                       ? dispatchedSourceResourceId ||
-                        requestItem.sourceResourceId
+                      requestItem.sourceResourceId
                       : requestItem.sourceResourceId,
 
                   receivedAt:
@@ -4493,61 +4491,61 @@ const updateSupplyRequestStatus = async (
                     auditEntry,
                   ],
                 }
-              : requestItem
-        )
-    );
+                : requestItem
+          )
+      );
 
-    // ==========================================================
-    // CLEAR PENDING REQUEST
-    // ==========================================================
+      // ==========================================================
+      // CLEAR PENDING REQUEST
+      // ==========================================================
 
-    if (
-      status === 'Approved' ||
-      status === 'Rejected' ||
-      status === 'Received'
-    ) {
-      clearPendingCampRequest(
-        id
+      if (
+        status === 'Approved' ||
+        status === 'Rejected' ||
+        status === 'Received'
+      ) {
+        clearPendingCampRequest(
+          id
+        );
+      }
+
+      // ==========================================================
+      // SUCCESS MESSAGE
+      // ==========================================================
+
+      if (status === 'In Transit') {
+        addToast(
+          'success',
+          'Dispatch Confirmed',
+          `${request.resourceName} request has been dispatched and is now in transit.`
+        );
+      } else if (
+        status === 'Received'
+      ) {
+        addToast(
+          'success',
+          'Supply Received',
+          `${request.quantity.toLocaleString()} ${request.unit} of ${request.resourceName} has been added to ${currentCamp.name} inventory.`
+        );
+      } else {
+        addToast(
+          'success',
+          `Request ${status}`,
+          `Supply request marked as ${status.toLowerCase()}.`
+        );
+      }
+
+    } catch (error) {
+
+      addToast(
+        'error',
+        'Request Update Failed',
+        error instanceof Error
+          ? error.message
+          : 'Unable to update the supply request in MongoDB.'
       );
     }
-
-    // ==========================================================
-    // SUCCESS MESSAGE
-    // ==========================================================
-
-    if (status === 'In Transit') {
-      addToast(
-        'success',
-        'Dispatch Confirmed',
-        `${request.resourceName} request has been dispatched and is now in transit.`
-      );
-    } else if (
-      status === 'Received'
-    ) {
-      addToast(
-        'success',
-        'Supply Received',
-        `${request.quantity.toLocaleString()} ${request.unit} of ${request.resourceName} has been added to ${currentCamp.name} inventory.`
-      );
-    } else {
-      addToast(
-        'success',
-        `Request ${status}`,
-        `Supply request marked as ${status.toLowerCase()}.`
-      );
-    }
-
-  } catch (error) {
-
-    addToast(
-      'error',
-      'Request Update Failed',
-      error instanceof Error
-        ? error.message
-        : 'Unable to update the supply request in MongoDB.'
-    );
-  }
-};
+  };
 
   // ============================================================
   // PROVIDER
