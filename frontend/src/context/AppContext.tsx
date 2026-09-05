@@ -237,7 +237,7 @@ const AppContext = createContext<
 >(undefined);
 
 const API_BASE_URL =
-  'http://localhost:4000/api';
+  'https://sacrms.onrender.com/api';
 
 export async function apiRequest<T>(
   path: string,
