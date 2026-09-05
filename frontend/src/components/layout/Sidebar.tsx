@@ -171,7 +171,7 @@ export const Sidebar: React.FC = () => {
       : navItems;
 
   return (
-    <nav className="bg-[#0a0a0a] flex flex-col h-screen fixed left-0 top-0 overflow-y-auto w-64 z-20 hidden lg:flex border-r border-white/10">
+    <nav className="bg-[#0a0a0a] flex flex-col h-screen fixed left-0 top-0 overflow-y-auto w-64 z-20 hidden md:flex border-r border-white/10">
 
       {/* Brand Header */}
       <div className="p-6 border-b border-white/10">

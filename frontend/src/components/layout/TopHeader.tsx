@@ -85,7 +85,7 @@ export const TopHeader: React.FC = () => {
 
   return (
     <>
-      <header className="bg-[#0a0a0a] flex items-center w-full min-w-0 h-16 px-3 sm:px-4 md:px-6 xl:px-8 sticky top-0 z-30 border-b border-white/10">
+      <header className="bg-[#0a0a0a] flex items-center w-full h-16 px-4 md:px-8 sticky top-0 z-30 border-b border-white/10">
 
         {/* LEFT SECTION */}
 
@@ -99,7 +99,7 @@ export const TopHeader: React.FC = () => {
                 !isMobileMenuOpen
               )
             }
-            className="lg:hidden text-white/70 p-1.5 mr-2 sm:mr-3 border border-white/15 hover:bg-white/10 cursor-pointer"
+            className="md:hidden text-white/70 p-1.5 mr-3 border border-white/15 hover:bg-white/10 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[22px]">
               menu
@@ -108,7 +108,7 @@ export const TopHeader: React.FC = () => {
 
           {/* FIELD COMMAND */}
 
-          <h2 className="text-sm sm:text-base font-black font-display text-white uppercase tracking-tighter whitespace-nowrap">
+          <h2 className="text-base font-black font-display text-white uppercase tracking-tighter whitespace-nowrap">
             FIELD COMMAND
           </h2>
 
@@ -120,7 +120,7 @@ export const TopHeader: React.FC = () => {
 
         {/* RIGHT SECTION */}
 
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <div className="flex items-center gap-2">
 
           {/* CAMP SELECTOR */}
 
@@ -139,7 +139,7 @@ export const TopHeader: React.FC = () => {
                   'Maintenance Supervisor'
               }
               aria-label="Operational Camp Selection"
-              className="appearance-none bg-[#141414] border border-white/15 text-white font-mono text-[10px] sm:text-xs uppercase tracking-wider rounded-none pl-2.5 sm:pl-3 pr-7 sm:pr-8 py-1.5 max-w-[118px] sm:max-w-none focus:outline-none focus:border-white cursor-pointer hover:bg-white/5 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="appearance-none bg-[#141414] border border-white/15 text-white font-mono text-xs uppercase tracking-wider rounded-none pl-3 pr-8 py-1.5 focus:outline-none focus:border-white cursor-pointer hover:bg-white/5 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {camps.map((camp) => (
                 <option
@@ -502,7 +502,7 @@ export const TopHeader: React.FC = () => {
       {isMobileMenuOpen && (
 
         <div
-          className="fixed inset-0 z-40 lg:hidden bg-black/80 backdrop-blur-xs"
+          className="fixed inset-0 z-40 md:hidden bg-black/80 backdrop-blur-xs"
           onClick={() =>
             setIsMobileMenuOpen(
               false
