@@ -244,7 +244,7 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token =
-    localStorage.getItem('sacrms_token');
+   sessionStorage.getItem('sacrms_token');
 
   const response = await fetch(
     `${API_BASE_URL}${path}`,
@@ -384,17 +384,17 @@ const setSelectedCampId = (campId: string) => {
   const [currentUser, setCurrentUser] =
     useState<UserProfile | null>(() => {
       if (
-        !localStorage.getItem(
-          'sacrms_token'
-        )
+      !sessionStorage.getItem(
+  'sacrms_token'
+)
       ) {
         return null;
       }
 
       const saved =
-        localStorage.getItem(
-          'sacrms_user'
-        );
+ sessionStorage.getItem(
+  'sacrms_user'
+);
 
       if (saved) {
         try {
@@ -1328,14 +1328,14 @@ setCamps(mappedCamps);
 
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem(
-        'sacrms_user',
-        JSON.stringify(currentUser)
-      );
+  sessionStorage.setItem(
+  'sacrms_user',
+  JSON.stringify(currentUser)
+);
     } else {
-      localStorage.removeItem(
-        'sacrms_user'
-      );
+    sessionStorage.removeItem(
+  'sacrms_user'
+);
     }
   }, [currentUser]);
 
@@ -2314,10 +2314,10 @@ setCamps(mappedCamps);
           token,
           user,
         }) => {
-          localStorage.setItem(
-            'sacrms_token',
-            token
-          );
+    sessionStorage.setItem(
+  'sacrms_token',
+  token
+);
 
           setCurrentUser(user);
 
@@ -2356,13 +2356,13 @@ setCamps(mappedCamps);
   // ============================================================
 
   const logout = () => {
-    localStorage.removeItem(
-      'sacrms_user'
-    );
+sessionStorage.removeItem(
+  'sacrms_user'
+);
 
-    localStorage.removeItem(
-      'sacrms_token'
-    );
+sessionStorage.removeItem(
+  'sacrms_token'
+);
 
     setCurrentUser(null);
 
