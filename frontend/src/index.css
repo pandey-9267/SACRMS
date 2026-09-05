@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Barlow', 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Barlow Condensed', 'Space Grotesk', sans-serif;
+
+  --color-main-bg: #ffffff;
+  --color-background: #ffffff;
+  --color-sidebar-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #f2f2f2;
+  --color-surface-container-highest: #e6e6e6;
+  --color-surface-container-low: #fafafa;
+  --color-surface-container-lowest: #ffffff;
+
+  --color-on-surface: #000000;
+  --color-on-surface-variant: #666666;
+  --color-on-background: #000000;
+  --color-secondary: #555555;
+
+  --color-border-subtle: rgba(255, 255, 255, 0.12);
+  --color-outline: rgba(255, 255, 255, 0.2);
+  --color-outline-variant: rgba(255, 255, 255, 0.08);
+
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #000000;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #000000;
+
+  --color-alert-healthy: #22c55e;
+  --color-alert-warning: #f59e0b;
+  --color-alert-critical: #ef4444;
+
+  --color-inverse-surface: #ffffff;
+  --color-inverse-on-surface: #0a0a0a;
+  --color-error: #ef4444;
+  --color-on-error: #ffffff;
+  --color-error-container: rgba(239, 68, 68, 0.15);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #000000;
+  letter-spacing: 0;
+  user-select: text;
+}
+
+.font-display {
+  font-family: 'Barlow Condensed', 'Space Grotesk', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.font-mono-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-stroke-white {
+  -webkit-text-stroke: 1.5px white;
+  color: transparent;
+}
+
+.text-stroke-subtle {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4);
+  color: transparent;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.icon-fill,
+.icon-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Tabular figures for aligned data columns */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Plain mode maps the existing dark utility classes to black and white. */
+body:not(.army-mode) [class*="bg-\["] { background-color: #ffffff !important; }
+body:not(.army-mode) [class*="text-white"] { color: #000000 !important; }
+body:not(.army-mode) [class*="text-black"] { color: #ffffff !important; }
+body:not(.army-mode) [class*="border-white"] { border-color: rgba(0, 0, 0, 0.2) !important; }
+body:not(.army-mode) [class~="bg-white"] { background-color: #000000 !important; }
+
+body.army-mode {
+  background-color: #3f493d;
+  background-image:
+    radial-gradient(ellipse at 12% 18%, rgba(30, 42, 35, 0.95) 0 7%, transparent 7.5%),
+    radial-gradient(ellipse at 68% 12%, rgba(77, 82, 72, 0.95) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 42% 42%, rgba(52, 69, 55, 0.96) 0 12%, transparent 12.5%),
+    radial-gradient(ellipse at 86% 55%, rgba(30, 42, 35, 0.95) 0 8%, transparent 8.5%),
+    radial-gradient(ellipse at 18% 78%, rgba(77, 82, 72, 0.95) 0 11%, transparent 11.5%),
+    linear-gradient(118deg, transparent 0 22%, rgba(64, 57, 53, 0.82) 22.5% 29%, transparent 29.5% 57%, rgba(50, 60, 49, 0.86) 57.5% 65%, transparent 65.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%);
+  background-size: 420px 520px, 500px 620px, 560px 700px, 460px 580px, 520px 640px, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
+
+body:not(.army-mode) [class~="bg-main-bg"] { background-color: #ffffff !important; }
+body.army-mode [class~="bg-main-bg"] { background-color: rgba(20, 25, 20, 0.72) !important; }
+body.army-mode [class~="bg-\[#0a0a0a\]"] { background-color: #101510 !important; }
+body.army-mode [class~="bg-\[#0d0d0d\]"] { background-color: #0d120e !important; }
+body.army-mode [class~="bg-\[#111111\]"] { background-color: #182018 !important; }
+body.army-mode [class~="bg-\[#121212\]"] { background-color: #1b231b !important; }
+body.army-mode [class~="bg-\[#141414\]"] { background-color: #202920 !important; }
+body.army-mode [class~="bg-\[#181818\]"] { background-color: #232d23 !important; }
+body.army-mode [class~="bg-white"] { background-color: #d4c39a !important; }
+body.army-mode [class*="text-white"] { color: #f4f1e7 !important; }
+body.army-mode [class~="text-black"] { color: #182018 !important; }
+body.army-mode [class*="border-white"] { border-color: rgba(212, 195, 154, 0.3) !important; }
+
+body.army-mode nav,
+body.army-mode header {
+  background-color: rgba(13, 18, 14, 0.88) !important;
+  background-image:
+    linear-gradient(rgba(13, 18, 14, 0.48), rgba(13, 18, 14, 0.48)),
+    radial-gradient(ellipse at 12% 18%, rgba(30, 42, 35, 0.95) 0 7%, transparent 7.5%),
+    radial-gradient(ellipse at 68% 12%, rgba(77, 82, 72, 0.95) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 42% 42%, rgba(52, 69, 55, 0.96) 0 12%, transparent 12.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%);
+  background-size: auto, 180px 220px, 220px 260px, 240px 300px, 100% 100%;
+  background-attachment: fixed;
+}
+
+body.army-mode .army-login-shell {
+  background-color: #3f493d !important;
+  background-image:
+    linear-gradient(rgba(13, 18, 14, 0.5), rgba(13, 18, 14, 0.5)),
+    radial-gradient(ellipse at 12% 18%, rgba(30, 42, 35, 0.95) 0 7%, transparent 7.5%),
+    radial-gradient(ellipse at 68% 12%, rgba(77, 82, 72, 0.95) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 42% 42%, rgba(52, 69, 55, 0.96) 0 12%, transparent 12.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%);
+  background-size: auto, 420px 520px, 500px 620px, 560px 700px, 100% 100%;
+  background-attachment: fixed;
+}
+
+body.army-mode .army-login-shell > div {
+  background-color: rgba(13, 18, 14, 0.84) !important;
+}
+
+body.army-mode .army-login-card {
+  background-color: rgba(13, 18, 14, 0.78) !important;
+  background-image:
+    linear-gradient(rgba(13, 18, 14, 0.64), rgba(13, 18, 14, 0.64)),
+    radial-gradient(ellipse at 18% 22%, rgba(77, 82, 72, 0.9) 0 9%, transparent 9.5%),
+    radial-gradient(ellipse at 78% 36%, rgba(52, 69, 55, 0.94) 0 14%, transparent 14.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%);
+  background-size: auto, 230px 280px, 280px 340px, 100% 100%;
+}
+
+/* Custom scrollbars for the field-console aesthetic */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #101510;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #59624d;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4c39a;
+}
+
+/* Brutalist cards and ambient styling */
+.ambient-shadow {
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.hover-ambient-shadow:hover {
+  box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.25);
+  transition: all 0.2s ease;
+}
