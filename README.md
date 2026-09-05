@@ -220,6 +220,6 @@ The generated files are written to `dist/`. Serve that directory with a static w
 npm run preview
 ```
 
-## License
+## License--
 
 This project includes Apache-2.0 license metadata in the application source.
