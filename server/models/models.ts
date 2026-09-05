@@ -92,6 +92,11 @@ const campSchema = new Schema(
       required: true,
     },
 
+    profileImage: {
+      type: String,
+      default: null
+    },
+
     weather: {
       type: String,
       default: 'Clear',

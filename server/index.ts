@@ -1,9 +1,11 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { isValidObjectId } from 'mongoose';
+import multer from 'multer';
+import path from 'path';
 
 import { connectDatabase } from './config/db';
 
@@ -26,6 +28,33 @@ import {
 
 const app = express();
 
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: 'uploads/camps',
+    filename: (_req, file, cb) => {
+      const extension = path.extname(file.originalname);
+      const filename = `camp-${Date.now()}${extension}`;
+      cb(null, filename);
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, and WEBP images are allowed'));
+    }
+  },
+});
+
 const port = Number(
   process.env.PORT || 4000
 );
@@ -44,6 +73,13 @@ app.use(
 
 app.use(express.json());
 
+app.use(
+  '/uploads',
+  express.static(
+    path.resolve('uploads'),
+  ),
+);
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -55,6 +91,33 @@ function idIsValid(
     typeof value === 'string' &&
     isValidObjectId(value)
   );
+}
+
+function generateCampAvatar(
+  name: string,
+  code: string,
+): string {
+  const cleanName = String(name).trim();
+  const cleanCode = String(code).trim();
+
+  const initials =
+    cleanName
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ||
+    cleanCode.slice(0, 2).toUpperCase() ||
+    'CP';
+
+  // Include the unique camp code so different camps
+  // get different generated avatars.
+  const avatarName = `${initials} ${cleanCode}`;
+
+  const label = encodeURIComponent(avatarName);
+
+  return `https://ui-avatars.com/api/?name=${label}&size=256&background=0f172a&color=ffffff&bold=true`;
 }
 
 // ============================================================
@@ -234,7 +297,7 @@ app.post(
         id: String(user._id),
       },
       process.env.JWT_SECRET ||
-        'development-secret',
+      'development-secret',
       {
         expiresIn: '8h',
       },
@@ -266,6 +329,7 @@ app.post(
   '/api/camps',
   requireAuth,
   requireRole('Admin'),
+  upload.single('profileImage'),
   async (
     req: AuthRequest,
     res,
@@ -279,9 +343,29 @@ app.post(
       commander,
       weather,
       temperature,
-      leader,
     } = req.body;
 
+    // FormData sends leader as a JSON string.
+    // Convert it back into an object.
+    let leader;
+
+    try {
+      leader =
+        typeof req.body.leader === 'string'
+          ? JSON.parse(req.body.leader)
+          : req.body.leader;
+    } catch {
+      return res.status(400).json({
+        message: 'Invalid leader details.',
+      });
+    }
+
+    // Uploaded image, if Admin selected one.
+    const uploadedProfileImage = req.file
+      ? `/uploads/camps/${req.file.filename}`
+      : null;
+
+    // Validate camp + leader details.
     if (
       !name ||
       !type ||
@@ -293,11 +377,13 @@ app.post(
       !leader?.rank
     ) {
       return res.status(400).json({
-        message:
-          'Camp and leader details are required',
+        message: 'Camp and leader details are required',
       });
     }
 
+    // Create camp.
+    // If an image was uploaded, use it.
+    // Otherwise generate a unique camp avatar.
     const camp =
       await Camp.create({
         name,
@@ -312,12 +398,21 @@ app.post(
           weather || 'Clear',
         temperature:
           temperature || 'N/A',
+
+        profileImage:
+          uploadedProfileImage ||
+          generateCampAvatar(
+            name,
+            code,
+          ),
       });
 
+    // Create starter resources for the new camp.
     await createStarterResources(
       camp,
     );
 
+    // Generate temporary password.
     const passwordCampName =
       String(name)
         .trim()
@@ -334,26 +429,36 @@ app.post(
     const temporaryPassword =
       `SACRMS_${passwordCampName}`;
 
+    // Create Camp Logistics user.
     const user =
       await User.create({
         name: leader.name,
+
         email:
           leader.email
             .toLowerCase(),
+
         passwordHash:
           await bcrypt.hash(
             temporaryPassword,
             12,
           ),
+
         role: 'Logistics',
-        campId: camp._id,
-        rank: leader.rank,
+
+        campId:
+          camp._id,
+
+        rank:
+          leader.rank,
+
         serviceId:
           `SVC-${String(
             code,
           ).toUpperCase()}`,
       });
 
+    // Audit camp creation.
     await audit(
       req,
       'CREATE_CAMP',
@@ -364,6 +469,7 @@ app.post(
       },
     );
 
+    // Send created camp + credentials back to frontend.
     return res.status(201).json({
       camp,
 
@@ -391,8 +497,8 @@ app.get(
       req.user?.role === 'Admin'
         ? {}
         : {
-            _id: req.user?.campId,
-          };
+          _id: req.user?.campId,
+        };
 
     return res.json(
       await Camp.find(filter).sort({
@@ -579,8 +685,8 @@ app.get(
     const campId =
       req.user?.role === 'Admin'
         ? String(
-            req.query.campId || '',
-          )
+          req.query.campId || '',
+        )
         : req.user?.campId;
 
     if (
@@ -688,7 +794,7 @@ app.post(
         burnRatePerPersonPerDay:
           Number(
             burnRatePerPersonPerDay ||
-              0,
+            0,
           ),
         location,
       });
@@ -737,7 +843,7 @@ app.patch(
       !resource ||
       (
         req.user?.role !==
-          'Admin' &&
+        'Admin' &&
         String(
           resource.campId,
         ) !== req.user?.campId
@@ -798,7 +904,7 @@ app.delete(
       !resource ||
       (
         req.user?.role !==
-          'Admin' &&
+        'Admin' &&
         String(
           resource.campId,
         ) !== req.user?.campId
@@ -840,8 +946,8 @@ app.get(
     const campId =
       req.user?.role === 'Admin'
         ? String(
-            req.query.campId || '',
-          )
+          req.query.campId || '',
+        )
         : req.user?.campId;
 
     if (
@@ -1053,9 +1159,9 @@ app.get(
       req.user?.role === 'Admin'
         ? {}
         : {
-            campId:
-              req.user?.campId,
-          };
+          campId:
+            req.user?.campId,
+        };
 
     return res.json(
       await SupplyRequest.find(
@@ -1146,7 +1252,7 @@ app.patch(
 
     const ownCamp =
       req.user?.role ===
-        'Logistics' &&
+      'Logistics' &&
       String(
         request.campId,
       ) === req.user?.campId;
@@ -1160,7 +1266,7 @@ app.patch(
     const canReceive =
       ownCamp &&
       request.status ===
-        'In Transit' &&
+      'In Transit' &&
       status === 'Received';
 
     // ----------------------------------------------------------
@@ -1176,20 +1282,20 @@ app.patch(
       (
         (
           request.status ===
-            'Submitted' &&
+          'Submitted' &&
           (
             status ===
-              'Approved' ||
+            'Approved' ||
             status ===
-              'Rejected'
+            'Rejected'
           )
         )
         ||
         (
           request.status ===
-            'Approved' &&
+          'Approved' &&
           status ===
-            'In Transit'
+          'In Transit'
         )
       );
 
@@ -1308,7 +1414,7 @@ app.patch(
       const previousStock =
         Number(
           destination.currentStock ||
-            0,
+          0,
         );
 
       const requestedQuantity =
@@ -1320,11 +1426,11 @@ app.patch(
         Math.min(
           Number(
             destination.maxCapacity ||
-              0,
+            0,
           ),
 
           previousStock +
-            requestedQuantity,
+          requestedQuantity,
         );
 
       // --------------------------------------------------------
@@ -1440,22 +1546,22 @@ app.get(
   ) => {
     const requestedCampId =
       typeof req.query.campId ===
-      'string'
+        'string'
         ? req.query.campId
         : undefined;
 
     const filter =
       req.user?.role ===
         'Admin' &&
-      requestedCampId
+        requestedCampId
         ? {
-            campId:
-              requestedCampId,
-          }
+          campId:
+            requestedCampId,
+        }
         : {
-            campId:
-              req.user?.campId,
-          };
+          campId:
+            req.user?.campId,
+        };
 
     return res.json(
       await Equipment.find(
@@ -1550,7 +1656,7 @@ app.patch(
       !equipment ||
       (
         req.user?.role !==
-          'Admin' &&
+        'Admin' &&
         String(
           equipment.campId,
         ) !== req.user?.campId
@@ -1596,22 +1702,22 @@ app.get(
   ) => {
     const requestedCampId =
       typeof req.query.campId ===
-      'string'
+        'string'
         ? req.query.campId
         : undefined;
 
     const filter =
       req.user?.role ===
         'Admin' &&
-      requestedCampId
+        requestedCampId
         ? {
-            campId:
-              requestedCampId,
-          }
+          campId:
+            requestedCampId,
+        }
         : {
-            campId:
-              req.user?.campId,
-          };
+          campId:
+            req.user?.campId,
+        };
 
     return res.json(
       await MaintenanceTask.find(
@@ -1706,7 +1812,7 @@ app.patch(
       !task ||
       (
         req.user?.role !==
-          'Admin' &&
+        'Admin' &&
         String(
           task.campId,
         ) !== req.user?.campId
