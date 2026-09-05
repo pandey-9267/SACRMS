@@ -746,23 +746,23 @@ export const AppProvider: React.FC<{
                     : null,
 
                 // Camp-specific settings
-                warningThreshold:
-                  Number(
-                    camp.warningThreshold ?? 45
-                  ),
+            warningThreshold: Number(
+  camp.warningThreshold ?? 45
+),
 
-                criticalThreshold:
-                  Number(
-                    camp.criticalThreshold ?? 20
-                  ),
+criticalThreshold: Number(
+  camp.criticalThreshold ?? 20
+),
 
-                autoAlerts:
-                  camp.autoAlerts ??
-                  true,
+autoAlerts:
+  typeof camp.autoAlerts === 'boolean'
+    ? camp.autoAlerts
+    : true,
 
-                audioPings:
-                  camp.audioPings ??
-                  false,
+audioPings:
+  typeof camp.audioPings === 'boolean'
+    ? camp.audioPings
+    : false,
               })
             );
 
