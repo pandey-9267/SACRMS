@@ -161,9 +161,14 @@ export const UsersView: React.FC = () => {
           /*
            * HQ photo
            */
-          const avatarUrl = isHQAdmin
-            ? hqAdminPhoto
-            : user.avatarUrl;
+       const avatarUrl = isHQAdmin
+  ? hqAdminPhoto
+  : user.avatarUrl ||
+    (assignedCamp
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          `${assignedCamp.name} ${assignedCamp.code}`
+        )}&size=256&background=0f172a&color=ffffff&bold=true`
+      : '');
 
           return (
             <div

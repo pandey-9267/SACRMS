@@ -87,13 +87,12 @@ export const TopHeader: React.FC = () => {
     <>
       <header className="bg-[#0a0a0a] flex items-center w-full h-16 px-4 md:px-8 sticky top-0 z-30 border-b border-white/10">
 
-        {/* =====================================================
-            LEFT SECTION
-        ====================================================== */}
+        {/* LEFT SECTION */}
 
         <div className="flex items-center shrink-0">
 
           {/* Mobile menu trigger */}
+
           <button
             onClick={() =>
               setIsMobileMenuOpen(
@@ -108,29 +107,22 @@ export const TopHeader: React.FC = () => {
           </button>
 
           {/* FIELD COMMAND */}
+
           <h2 className="text-base font-black font-display text-white uppercase tracking-tighter whitespace-nowrap">
             FIELD COMMAND
           </h2>
 
         </div>
 
-
-        {/* =====================================================
-            SPACER
-        ====================================================== */}
+        {/* SPACER */}
 
         <div className="flex-1" />
 
+        {/* RIGHT SECTION */}
 
-        {/* =====================================================
-            RIGHT SECTION
-        ====================================================== */}
+        <div className="flex items-center gap-2">
 
-        <div className="flex items-center gap-3">
-
-          {/* =================================================
-              CAMP SELECTOR
-          ================================================= */}
+          {/* CAMP SELECTOR */}
 
           <div className="relative flex items-center">
 
@@ -166,10 +158,7 @@ export const TopHeader: React.FC = () => {
 
           </div>
 
-
-          {/* =================================================
-              NOTIFICATIONS
-          ================================================= */}
+          {/* NOTIFICATIONS */}
 
           <div
             className="relative"
@@ -182,7 +171,7 @@ export const TopHeader: React.FC = () => {
                   !isAlertsOpen
                 )
               }
-              className="text-white/70 hover:text-white transition-colors p-2 border border-white/10 hover:border-white/30 hover:bg-white/5 relative cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 hover:border-white/30 hover:bg-white/5 relative cursor-pointer"
               title="Operational Alerts"
             >
               <span className="material-symbols-outlined text-[20px]">
@@ -193,7 +182,6 @@ export const TopHeader: React.FC = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-alert-critical ring-2 ring-black" />
               )}
             </button>
-
 
             {isAlertsOpen && (
               <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#111111] border border-white/20 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 shadow-2xl">
@@ -212,7 +200,6 @@ export const TopHeader: React.FC = () => {
 
                   </div>
 
-
                   <button
                     onClick={() => {
                       setCurrentView(
@@ -229,7 +216,6 @@ export const TopHeader: React.FC = () => {
                   </button>
 
                 </div>
-
 
                 <div className="max-h-72 overflow-y-auto divide-y divide-white/10">
 
@@ -273,7 +259,6 @@ export const TopHeader: React.FC = () => {
 
                           </div>
 
-
                           <p className="font-bold text-white leading-snug">
                             {alert.title}
                           </p>
@@ -281,7 +266,6 @@ export const TopHeader: React.FC = () => {
                           <p className="text-white/50 text-[11px] mt-0.5 line-clamp-2">
                             {alert.description}
                           </p>
-
 
                           {!alert.acknowledged && (
                             <div className="mt-2 flex gap-2">
@@ -313,10 +297,7 @@ export const TopHeader: React.FC = () => {
 
           </div>
 
-
-          {/* =================================================
-              QUICK APPS
-          ================================================= */}
+          {/* QUICK APPS */}
 
           <button
             onClick={() =>
@@ -324,7 +305,7 @@ export const TopHeader: React.FC = () => {
                 true
               )
             }
-            className="text-white/70 hover:text-white transition-colors p-2 border border-white/10 hover:border-white/30 hover:bg-white/5 cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 hover:border-white/30 hover:bg-white/5 cursor-pointer"
             title="Logistics Utilities"
           >
             <span className="material-symbols-outlined text-[20px]">
@@ -332,10 +313,7 @@ export const TopHeader: React.FC = () => {
             </span>
           </button>
 
-
-          {/* =================================================
-              HELP
-          ================================================= */}
+          {/* HELP */}
 
           <button
             onClick={() =>
@@ -343,7 +321,7 @@ export const TopHeader: React.FC = () => {
                 true
               )
             }
-            className="text-white/70 hover:text-white transition-colors p-2 border border-white/10 hover:border-white/30 hover:bg-white/5 cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 hover:border-white/30 hover:bg-white/5 cursor-pointer"
             title="System Documentation & SOP"
           >
             <span className="material-symbols-outlined text-[20px]">
@@ -351,10 +329,7 @@ export const TopHeader: React.FC = () => {
             </span>
           </button>
 
-
-          {/* =================================================
-              PROFILE
-          ================================================= */}
+          {/* PROFILE */}
 
           <div
             className="relative"
@@ -367,26 +342,32 @@ export const TopHeader: React.FC = () => {
                   !isProfileMenuOpen
                 )
               }
-              className="w-8 h-8 bg-neutral-900 border border-white/30 hover:border-white transition-all cursor-pointer overflow-hidden flex items-center justify-center"
+              className="w-10 h-10 bg-neutral-900 border border-white/30 hover:border-white transition-all cursor-pointer overflow-hidden flex items-center justify-center"
             >
 
-              <img
-                src={
-                  currentUser?.avatarUrl ||
-                  hqAdminPhoto
-                }
-                alt="Avatar"
-                className="w-full h-full object-cover grayscale"
-              />
+              {currentUser?.role === 'Admin' ? (
+                <img
+                  src={hqAdminPhoto}
+                  alt={
+                    currentUser.name ||
+                    'HQ Admin'
+                  }
+                  className="w-full h-full object-cover grayscale"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[#111111] text-white font-mono font-bold text-sm">
+                  CL
+                </div>
+              )}
 
             </button>
-
 
             {isProfileMenuOpen && (
 
               <div className="absolute right-0 mt-2 w-64 bg-[#111111] border border-white/20 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 shadow-2xl">
 
                 {/* User Information */}
+
                 <div className="px-4 py-3 border-b border-white/10">
 
                   <p className="font-bold text-white text-xs uppercase tracking-wider">
@@ -407,8 +388,8 @@ export const TopHeader: React.FC = () => {
 
                 </div>
 
-
                 {/* Branch Identity */}
+
                 <div className="px-4 py-2 border-b border-white/10">
 
                   <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1.5">
@@ -421,10 +402,10 @@ export const TopHeader: React.FC = () => {
 
                 </div>
 
-
                 <div className="pt-1">
 
                   {/* Army Mode */}
+
                   <button
                     onClick={() =>
                       setTheme(
@@ -456,8 +437,8 @@ export const TopHeader: React.FC = () => {
 
                   </button>
 
-
                   {/* Settings */}
+
                   <button
                     onClick={() => {
                       setCurrentView(
@@ -481,8 +462,8 @@ export const TopHeader: React.FC = () => {
 
                   </button>
 
-
                   {/* Logout */}
+
                   <button
                     onClick={() => {
                       logout();
@@ -516,10 +497,7 @@ export const TopHeader: React.FC = () => {
 
       </header>
 
-
-      {/* =======================================================
-          MOBILE DRAWER
-      ======================================================== */}
+      {/* MOBILE DRAWER */}
 
       {isMobileMenuOpen && (
 
@@ -560,11 +538,10 @@ export const TopHeader: React.FC = () => {
 
             </div>
 
-
             <div className="space-y-1 flex-1">
 
               {(currentUser?.role ===
-              'Logistics'
+                'Logistics'
                 ? [
                     [
                       'dashboard',
@@ -649,7 +626,7 @@ export const TopHeader: React.FC = () => {
                       'Supply Requests',
                     ],
                   ]
-                )
+              )
                 .filter(
                   ([view]) =>
                     canAccessView(

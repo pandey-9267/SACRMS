@@ -2680,6 +2680,24 @@ export const AppProvider: React.FC<{
               'string'
               ? getMediaUrl(camp.profileImage)
               : null,
+
+          warningThreshold: Number(
+            camp.warningThreshold ?? 45
+          ),
+
+          criticalThreshold: Number(
+            camp.criticalThreshold ?? 20
+          ),
+
+          autoAlerts:
+            typeof camp.autoAlerts === 'boolean'
+              ? camp.autoAlerts
+              : true,
+
+          audioPings:
+            typeof camp.audioPings === 'boolean'
+              ? camp.audioPings
+              : false,
         };
 
         const newProfile:
@@ -2701,9 +2719,9 @@ export const AppProvider: React.FC<{
           campId:
             createdCamp.id,
 
+
           avatarUrl:
-            createdCamp.profileImage ||
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+            createdCamp.profileImage || '',
 
           serviceId:
             result.leader.serviceId,
