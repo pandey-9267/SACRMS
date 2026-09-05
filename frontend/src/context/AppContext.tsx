@@ -239,6 +239,18 @@ const AppContext = createContext<
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+
+const getMediaUrl = (value?: string | null) => {
+  if (!value) return '';
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${API_ORIGIN}${value.startsWith('/') ? value : `/${value}`}`;
+};
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
@@ -246,25 +258,30 @@ export async function apiRequest<T>(
   const token =
     sessionStorage.getItem('sacrms_token');
 
+  const isFormData =
+    options.body instanceof FormData;
+
   const response = await fetch(
     `${API_BASE_URL}${path}`,
     {
       ...options,
-    headers: {
-  ...(options.body instanceof FormData
-    ? {}
-    : {
-        'Content-Type': 'application/json',
-      }),
+      headers: {
+        ...(isFormData
+          ? {}
+          : {
+            'Content-Type':
+              'application/json',
+          }),
 
-  ...(token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {}),
+        ...(token
+          ? {
+            Authorization:
+              `Bearer ${token}`,
+          }
+          : {}),
 
-  ...options.headers,
-},
+        ...options.headers,
+      },
     }
   );
 
@@ -276,12 +293,14 @@ export async function apiRequest<T>(
   if (!response.ok) {
     throw new Error(
       payload?.message ||
-      'Backend request failed'
+      `Request failed with status ${response.status}`
     );
   }
 
   return payload as T;
 }
+
+
 
 const roleViews: Record<
   UserProfile['role'],
@@ -720,6 +739,11 @@ export const AppProvider: React.FC<{
                   camp.temperature ||
                   'N/A'
                 ),
+
+                profileImage:
+                  typeof camp.profileImage === 'string'
+                    ? `${API_BASE_URL.replace('/api', '')}${camp.profileImage}`
+                    : null,
 
                 // Camp-specific settings
                 warningThreshold:
@@ -1363,6 +1387,7 @@ export const AppProvider: React.FC<{
       status: 'Standby',
       weather: 'No data',
       temperature: 'N/A',
+      profileImage: null,
     };
 
   const currentCampResources =
@@ -2443,337 +2468,337 @@ export const AppProvider: React.FC<{
   // CREATE CAMP PROFILE
   // ============================================================
 
-const createCampProfile =
-  async (
-    campData: {
-      name: string;
-      code: string;
-      type: Camp['type'];
-      location: string;
-      commander: string;
-      personnel: number;
-      readinessScore: number;
-      weather: string;
-      temperature: string;
-      profileImage?: File | null;
-    }
-  ) => {
-    if (!hasRole('Admin')) {
-      addToast(
-        'warning',
-        'Access Restricted',
-        'Only the HQ Admin can create camps and camp credentials.'
-      );
-
-      return null;
-    }
-
-    const safeName =
-      campData.name.trim();
-
-    const safeCode =
-      campData.code.trim();
-
-    if (
-      !safeName ||
-      !safeCode
-    ) {
-      addToast(
-        'error',
-        'Camp validation failed',
-        'Camp name and code are required.'
-      );
-
-      return null;
-    }
-
-    const normalizedName =
-      safeName
-        .toLowerCase()
-        .replace(
-          /[^a-z0-9]+/g,
-          '-'
-        )
-        .replace(
-          /^-|-$/g,
-          ''
+  const createCampProfile =
+    async (
+      campData: {
+        name: string;
+        code: string;
+        type: Camp['type'];
+        location: string;
+        commander: string;
+        personnel: number;
+        readinessScore: number;
+        weather: string;
+        temperature: string;
+        profileImage?: File | null;
+      }
+    ) => {
+      if (!hasRole('Admin')) {
+        addToast(
+          'warning',
+          'Access Restricted',
+          'Only the HQ Admin can create camps and camp credentials.'
         );
 
-    const profileEmail =
-      `logistics.lead@${normalizedName}.mil`;
+        return null;
+      }
 
-    try {
-      const formData =
-        new FormData();
+      const safeName =
+        campData.name.trim();
 
-      formData.append(
-        'name',
+      const safeCode =
+        campData.code.trim();
+
+      if (
+        !safeName ||
+        !safeCode
+      ) {
+        addToast(
+          'error',
+          'Camp validation failed',
+          'Camp name and code are required.'
+        );
+
+        return null;
+      }
+
+      const normalizedName =
         safeName
-      );
-
-      formData.append(
-        'code',
-        safeCode
-      );
-
-      formData.append(
-        'type',
-        campData.type
-      );
-
-      formData.append(
-        'personnel',
-        String(
-          Math.max(
-            0,
-            campData.personnel
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9]+/g,
+            '-'
           )
-        )
-      );
+          .replace(
+            /^-|-$/g,
+            ''
+          );
 
-      formData.append(
-        'location',
-        campData.location.trim()
-      );
+      const profileEmail =
+        `logistics.lead@${normalizedName}.mil`;
 
-      formData.append(
-        'commander',
-        campData.commander.trim() ||
+      try {
+        const formData =
+          new FormData();
+
+        formData.append(
+          'name',
+          safeName
+        );
+
+        formData.append(
+          'code',
+          safeCode
+        );
+
+        formData.append(
+          'type',
+          campData.type
+        );
+
+        formData.append(
+          'personnel',
+          String(
+            Math.max(
+              0,
+              campData.personnel
+            )
+          )
+        );
+
+        formData.append(
+          'location',
+          campData.location.trim()
+        );
+
+        formData.append(
+          'commander',
+          campData.commander.trim() ||
           'HQ Assigned Commander'
-      );
+        );
 
-      formData.append(
-        'weather',
-        campData.weather.trim() ||
+        formData.append(
+          'weather',
+          campData.weather.trim() ||
           'Clear'
-      );
+        );
 
-      formData.append(
-        'temperature',
-        campData.temperature.trim() ||
+        formData.append(
+          'temperature',
+          campData.temperature.trim() ||
           'N/A'
-      );
+        );
 
-      formData.append(
-        'leader',
-        JSON.stringify({
+        formData.append(
+          'leader',
+          JSON.stringify({
+            name:
+              campData.commander.trim() ||
+              'Camp Logistics Lead',
+
+            email:
+              profileEmail,
+
+            rank:
+              `${safeName} Logistics Lead`,
+          })
+        );
+
+        if (
+          campData.profileImage
+        ) {
+          formData.append(
+            'profileImage',
+            campData.profileImage
+          );
+        }
+
+        const result =
+          await apiRequest<{
+            camp: Record<
+              string,
+              unknown
+            >;
+
+            leader: {
+              id: string;
+              name: string;
+              email: string;
+              serviceId: string;
+            };
+
+            temporaryPassword:
+            string;
+          }>(
+            '/camps',
+            {
+              method: 'POST',
+              body: formData,
+            }
+          );
+
+        const camp =
+          result.camp;
+
+        const createdCamp:
+          Camp = {
+          id: String(
+            camp._id
+          ),
+
+          name: String(
+            camp.name
+          ),
+
+          type:
+            camp.type as Camp['type'],
+
+          code: String(
+            camp.code
+          ),
+
+          personnel:
+            Number(
+              camp.personnel
+            ),
+
+          readinessScore:
+            campData.readinessScore,
+
+          location:
+            String(
+              camp.location
+            ),
+
+          commander:
+            String(
+              camp.commander
+            ),
+
+          status:
+            camp.status as Camp['status'],
+
+          weather:
+            String(
+              camp.weather ??
+              (campData.weather.trim() ||
+                'Clear')
+            ),
+
+          temperature:
+            String(
+              camp.temperature ??
+              (campData.temperature.trim() ||
+                '22°C / 72°F')
+            ),
+
+          profileImage:
+            typeof camp.profileImage ===
+              'string'
+              ? getMediaUrl(camp.profileImage)
+              : null,
+        };
+
+        const newProfile:
+          UserProfile = {
+          id:
+            result.leader.id,
+
           name:
-            campData.commander.trim() ||
-            'Camp Logistics Lead',
+            result.leader.name,
 
           email:
-            profileEmail,
+            result.leader.email,
+
+          role: 'Logistics',
 
           rank:
             `${safeName} Logistics Lead`,
-        })
-      );
 
-      if (
-        campData.profileImage
-      ) {
-        formData.append(
-          'profileImage',
-          campData.profileImage
-        );
-      }
+          campId:
+            createdCamp.id,
 
-      const result =
-        await apiRequest<{
-          camp: Record<
+          avatarUrl:
+            createdCamp.profileImage ||
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+
+          serviceId:
+            result.leader.serviceId,
+
+          accessScope:
+            'Camp',
+        };
+
+        const existingProfiles =
+          JSON.parse(
+            localStorage.getItem(
+              'sacrms_profiles'
+            ) || '[]'
+          ) as UserProfile[];
+
+        const existingPasswords =
+          JSON.parse(
+            localStorage.getItem(
+              'sacrms_profile_passwords'
+            ) || '{}'
+          ) as Record<
             string,
-            unknown
+            string
           >;
 
-          leader: {
-            id: string;
-            name: string;
-            email: string;
-            serviceId: string;
-          };
-
-          temporaryPassword:
-            string;
-        }>(
-          '/camps',
-          {
-            method: 'POST',
-            body: formData,
-          }
+        localStorage.setItem(
+          'sacrms_profiles',
+          JSON.stringify([
+            ...existingProfiles,
+            newProfile,
+          ])
         );
 
-      const camp =
-        result.camp;
+        existingPasswords[
+          profileEmail.toLowerCase()
+        ] =
+          result.temporaryPassword;
 
-      const createdCamp:
-        Camp = {
-        id: String(
-          camp._id
-        ),
+        localStorage.setItem(
+          'sacrms_profile_passwords',
+          JSON.stringify(
+            existingPasswords
+          )
+        );
 
-        name: String(
-          camp.name
-        ),
+        setCamps(
+          (prev) => [
+            createdCamp,
+            ...prev,
+          ]
+        );
 
-        type:
-          camp.type as Camp['type'],
+        setSelectedCampId(
+          createdCamp.id
+        );
 
-        code: String(
-          camp.code
-        ),
+        setCurrentView(
+          'dashboard'
+        );
 
-        personnel:
-          Number(
-            camp.personnel
-          ),
+        addToast(
+          'success',
+          'Camp created',
+          `${safeName} was saved to MongoDB with generated credentials.`
+        );
 
-        readinessScore:
-          campData.readinessScore,
+        return {
+          id:
+            createdCamp.id,
 
-        location:
-          String(
-            camp.location
-          ),
+          profileEmail,
 
-        commander:
-          String(
-            camp.commander
-          ),
+          profilePassword:
+            result.temporaryPassword,
+        };
 
-        status:
-          camp.status as Camp['status'],
+      } catch (error) {
+        addToast(
+          'error',
+          'Camp creation failed',
+          error instanceof Error
+            ? error.message
+            : 'Unable to save camp to MongoDB.'
+        );
 
-    weather:
-  String(
-    camp.weather ??
-      (campData.weather.trim() ||
-        'Clear')
-  ),
-
-   temperature:
-  String(
-    camp.temperature ??
-      (campData.temperature.trim() ||
-        '22°C / 72°F')
-  ),
-
-    profileImage:
-  typeof camp.profileImage ===
-    'string'
-    ? camp.profileImage
-    : null,
-      };
-
-      const newProfile:
-        UserProfile = {
-        id:
-          result.leader.id,
-
-        name:
-          result.leader.name,
-
-        email:
-          result.leader.email,
-
-        role: 'Logistics',
-
-        rank:
-          `${safeName} Logistics Lead`,
-
-        campId:
-          createdCamp.id,
-
-        avatarUrl:
-          createdCamp.profileImage ||
-          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
-
-        serviceId:
-          result.leader.serviceId,
-
-        accessScope:
-          'Camp',
-      };
-
-      const existingProfiles =
-        JSON.parse(
-          localStorage.getItem(
-            'sacrms_profiles'
-          ) || '[]'
-        ) as UserProfile[];
-
-      const existingPasswords =
-        JSON.parse(
-          localStorage.getItem(
-            'sacrms_profile_passwords'
-          ) || '{}'
-        ) as Record<
-          string,
-          string
-        >;
-
-      localStorage.setItem(
-        'sacrms_profiles',
-        JSON.stringify([
-          ...existingProfiles,
-          newProfile,
-        ])
-      );
-
-      existingPasswords[
-        profileEmail.toLowerCase()
-      ] =
-        result.temporaryPassword;
-
-      localStorage.setItem(
-        'sacrms_profile_passwords',
-        JSON.stringify(
-          existingPasswords
-        )
-      );
-
-      setCamps(
-        (prev) => [
-          createdCamp,
-          ...prev,
-        ]
-      );
-
-      setSelectedCampId(
-        createdCamp.id
-      );
-
-      setCurrentView(
-        'dashboard'
-      );
-
-      addToast(
-        'success',
-        'Camp created',
-        `${safeName} was saved to MongoDB with generated credentials.`
-      );
-
-      return {
-        id:
-          createdCamp.id,
-
-        profileEmail,
-
-        profilePassword:
-          result.temporaryPassword,
-      };
-
-    } catch (error) {
-      addToast(
-        'error',
-        'Camp creation failed',
-        error instanceof Error
-          ? error.message
-          : 'Unable to save camp to MongoDB.'
-      );
-
-      return null;
-    }
-  };
+        return null;
+      }
+    };
   // ============================================================
   // DELETE CAMP
   // ============================================================

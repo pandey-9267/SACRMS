@@ -43,6 +43,8 @@ export interface Camp {
   weather: string;
   temperature: string;
 
+  profileImage: string | null;
+
   // Camp-specific settings
   warningThreshold: number;
   criticalThreshold: number;
