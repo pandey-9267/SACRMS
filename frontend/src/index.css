@@ -200,3 +200,155 @@ body.army-mode .army-login-card {
   border-color: rgba(255, 255, 255, 0.25);
   transition: all 0.2s ease;
 }
+
+
+/* ============================================================
+   SACRMS RESPONSIVE SYSTEM
+   Desktop-first layout with tablet/mobile safeguards.
+   ============================================================ */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+/* Prevent long operational strings from expanding the workspace. */
+main,
+main > *,
+main section,
+main article {
+  min-width: 0;
+}
+
+/* Keep data tables usable on narrow screens. */
+.overflow-x-auto {
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.overflow-x-auto table {
+  min-width: 640px;
+}
+
+/* Inputs/selects should never force a card wider than the viewport. */
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+/* Modal panels: use nearly all available width on small devices. */
+@media (max-width: 639px) {
+  .fixed.inset-0.z-50 > div {
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  .fixed.inset-0.z-50 {
+    padding: 0.5rem !important;
+  }
+
+  .fixed.inset-0.z-50 > div {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Two/three-column modal fields collapse cleanly. */
+  .fixed.inset-0.z-50 .grid-cols-2,
+  .fixed.inset-0.z-50 .grid-cols-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .fixed.inset-0.z-50 .justify-end {
+    justify-content: stretch;
+  }
+
+  .fixed.inset-0.z-50 .justify-end > button {
+    flex: 1 1 0;
+  }
+
+  /* Toasts stay inside the phone viewport. */
+  .fixed.bottom-5.right-5 {
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    bottom: 0.5rem !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
+/* Tablet: sidebar is replaced by the existing mobile drawer until laptop width. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  main {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+}
+
+/* Small laptop / tablet landscape: reduce oversized page controls. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  main {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+}
+
+/* Mobile header: keep command title and controls from competing for width. */
+@media (max-width: 639px) {
+  header {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  header h2 {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  header .relative > div.absolute {
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+/* Mobile navigation drawer should use the full practical phone width. */
+@media (max-width: 639px) {
+  .lg\:hidden.fixed.inset-0 > div:first-child,
+  .fixed.inset-0.z-40 > div {
+    width: min(18rem, 86vw) !important;
+  }
+}
+
+/* Respect reduced-motion preferences for the responsive shell. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
