@@ -742,27 +742,27 @@ export const AppProvider: React.FC<{
 
                 profileImage:
                   typeof camp.profileImage === 'string'
-                    ? `${API_BASE_URL.replace('/api', '')}${camp.profileImage}`
+                    ? getMediaUrl(camp.profileImage)
                     : null,
 
                 // Camp-specific settings
-            warningThreshold: Number(
-  camp.warningThreshold ?? 45
-),
+                warningThreshold: Number(
+                  camp.warningThreshold ?? 45
+                ),
 
-criticalThreshold: Number(
-  camp.criticalThreshold ?? 20
-),
+                criticalThreshold: Number(
+                  camp.criticalThreshold ?? 20
+                ),
 
-autoAlerts:
-  typeof camp.autoAlerts === 'boolean'
-    ? camp.autoAlerts
-    : true,
+                autoAlerts:
+                  typeof camp.autoAlerts === 'boolean'
+                    ? camp.autoAlerts
+                    : true,
 
-audioPings:
-  typeof camp.audioPings === 'boolean'
-    ? camp.audioPings
-    : false,
+                audioPings:
+                  typeof camp.audioPings === 'boolean'
+                    ? camp.audioPings
+                    : false,
               })
             );
 
@@ -2443,13 +2443,6 @@ audioPings:
       'sacrms_pending_requests'
     );
 
-    localStorage.removeItem(
-      'sacrms_profiles'
-    );
-
-    localStorage.removeItem(
-      'sacrms_profile_passwords'
-    );
 
     sessionStorage.removeItem(
       'sacrms_user'
@@ -2719,42 +2712,6 @@ audioPings:
             'Camp',
         };
 
-        const existingProfiles =
-          JSON.parse(
-            localStorage.getItem(
-              'sacrms_profiles'
-            ) || '[]'
-          ) as UserProfile[];
-
-        const existingPasswords =
-          JSON.parse(
-            localStorage.getItem(
-              'sacrms_profile_passwords'
-            ) || '{}'
-          ) as Record<
-            string,
-            string
-          >;
-
-        localStorage.setItem(
-          'sacrms_profiles',
-          JSON.stringify([
-            ...existingProfiles,
-            newProfile,
-          ])
-        );
-
-        existingPasswords[
-          profileEmail.toLowerCase()
-        ] =
-          result.temporaryPassword;
-
-        localStorage.setItem(
-          'sacrms_profile_passwords',
-          JSON.stringify(
-            existingPasswords
-          )
-        );
 
         setCamps(
           (prev) => [
@@ -2854,63 +2811,7 @@ audioPings:
         return;
       }
 
-      const storedProfiles =
-        JSON.parse(
-          localStorage.getItem(
-            'sacrms_profiles'
-          ) || '[]'
-        ) as UserProfile[];
 
-      const storedPasswords =
-        JSON.parse(
-          localStorage.getItem(
-            'sacrms_profile_passwords'
-          ) || '{}'
-        ) as Record<
-          string,
-          string
-        >;
-
-      const relatedEmails =
-        storedProfiles
-          .filter(
-            (profile) =>
-              profile.campId ===
-              campId
-          )
-          .map(
-            (profile) =>
-              profile.email.toLowerCase()
-          );
-
-      relatedEmails.forEach(
-        (email) => {
-          delete storedPasswords[
-            email
-          ];
-        }
-      );
-
-      const remainingProfiles =
-        storedProfiles.filter(
-          (profile) =>
-            profile.campId !==
-            campId
-        );
-
-      localStorage.setItem(
-        'sacrms_profiles',
-        JSON.stringify(
-          remainingProfiles
-        )
-      );
-
-      localStorage.setItem(
-        'sacrms_profile_passwords',
-        JSON.stringify(
-          storedPasswords
-        )
-      );
 
       setCamps(
         (prev) =>
