@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { isValidObjectId } from 'mongoose';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 import { connectDatabase } from './config/db';
 
@@ -83,6 +84,55 @@ app.use(
 // ============================================================
 // HELPERS
 // ============================================================
+
+function deleteCampImage(profileImage?: string | null) {
+  if (!profileImage) {
+    return;
+  }
+
+  let imagePath = profileImage;
+
+  // If the database contains a full URL such as:
+  // https://sacrms.onrender.com/uploads/camps/camp-123.jpeg
+  // extract only the pathname.
+  if (/^https?:\/\//i.test(profileImage)) {
+    try {
+      imagePath = new URL(profileImage).pathname;
+    } catch {
+      return;
+    }
+  }
+
+  // Only delete images uploaded by SACRMS.
+  // Do NOT delete external generated avatars such as ui-avatars.com.
+  if (!imagePath.startsWith('/uploads/camps/')) {
+    return;
+  }
+
+  const fileName = path.basename(imagePath);
+
+  const filePath = path.resolve(
+    process.cwd(),
+    'uploads',
+    'camps',
+    fileName,
+  );
+
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+
+      console.log(
+        `Deleted camp image: ${fileName}`,
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Failed to delete camp image: ${fileName}`,
+      error,
+    );
+  }
+}
 
 function idIsValid(
   value: unknown,
@@ -611,8 +661,11 @@ app.delete(
     req: AuthRequest,
     res,
   ) => {
-    const { id } =
-      req.params;
+    const { id } = req.params;
+
+    // ----------------------------------------------------------
+    // VALIDATE CAMP ID
+    // ----------------------------------------------------------
 
     if (!idIsValid(id)) {
       return res.status(400).json({
@@ -620,16 +673,26 @@ app.delete(
       });
     }
 
-    const camp =
-      await Camp.findByIdAndDelete(
-        id,
-      );
+    // ----------------------------------------------------------
+    // FIND CAMP FIRST
+    // ----------------------------------------------------------
+    // We must find the camp before deleting it because we need
+    // its profileImage path.
+
+    const camp = await Camp.findById(id);
 
     if (!camp) {
       return res.status(404).json({
         message: 'Camp not found',
       });
     }
+
+    // Save the image path before deleting the camp.
+    const profileImage = camp.profileImage;
+
+    // ----------------------------------------------------------
+    // DELETE RELATED DATA
+    // ----------------------------------------------------------
 
     await Promise.all([
       User.deleteMany({
@@ -657,16 +720,43 @@ app.delete(
       }),
     ]);
 
+    // ----------------------------------------------------------
+    // DELETE CAMP
+    // ----------------------------------------------------------
+
+    await Camp.findByIdAndDelete(id);
+
+    // ----------------------------------------------------------
+    // DELETE UPLOADED CAMP IMAGE
+    // ----------------------------------------------------------
+    // Only local SACRMS uploaded images are deleted.
+    // Generated ui-avatars images are external and are ignored.
+
+    deleteCampImage(profileImage);
+
+    // ----------------------------------------------------------
+    // AUDIT
+    // ----------------------------------------------------------
+
     await audit(
       req,
       'DELETE_CAMP',
       'Camp',
       id,
+      {
+        deletedProfileImage:
+          profileImage || null,
+      },
     );
 
+    // ----------------------------------------------------------
+    // RESPONSE
+    // ----------------------------------------------------------
+
     return res.json({
+      success: true,
       message:
-        'Camp and related records deleted',
+        'Camp, related records, and uploaded image deleted successfully',
     });
   },
 );
