@@ -414,6 +414,7 @@ export const TopHeader: React.FC = () => {
                           : 'army'
                       )
                     }
+                    aria-pressed={theme === 'army'}
                     className="w-full text-left px-4 py-2 text-xs text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-between cursor-pointer font-mono uppercase tracking-wider"
                   >
 

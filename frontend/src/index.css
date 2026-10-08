@@ -119,6 +119,161 @@ body.army-mode {
   background-attachment: fixed;
 }
 
+body.army-mode-transition::after {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 50%;
+  z-index: 9999;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(13, 18, 14, 0.98) 0 93%,
+      rgba(224, 201, 141, 0.95) 96%,
+      rgba(13, 18, 14, 0.98) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(224, 201, 141, 0.08) 0 1px,
+      transparent 1px 6px
+    );
+  content: '';
+  pointer-events: none;
+  transform: translateY(-100%);
+  animation: army-mode-shutter-top 0.9s cubic-bezier(0.22, 0.8, 0.32, 1) forwards;
+}
+
+body.army-mode-transition::before {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 50%;
+  z-index: 9998;
+  background:
+    linear-gradient(
+      0deg,
+      rgba(13, 18, 14, 0.98) 0 93%,
+      rgba(224, 201, 141, 0.95) 96%,
+      rgba(13, 18, 14, 0.98) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(224, 201, 141, 0.08) 0 1px,
+      transparent 1px 6px
+    );
+  content: '';
+  pointer-events: none;
+  transform: translateY(100%);
+  animation: army-mode-shutter-bottom 0.9s cubic-bezier(0.22, 0.8, 0.32, 1) forwards;
+}
+
+body.army-mode-transition {
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 201, 141, 0.75),
+    inset 0 0 70px rgba(224, 201, 141, 0.18);
+}
+
+@keyframes army-mode-shutter-top {
+  0% {
+    transform: translateY(-100%);
+  }
+  32%,
+  66% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes army-mode-shutter-bottom {
+  0% {
+    transform: translateY(100%);
+  }
+  32%,
+  66% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+body.army-mode-transition .army-login-shell {
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 201, 141, 0.55),
+    inset 0 0 70px rgba(224, 201, 141, 0.14);
+}
+
+/* The shutters provide the transition frame; preserve reduced-motion accessibility. */
+@media (prefers-reduced-motion: reduce) {
+  body.army-mode-transition::before,
+  body.army-mode-transition::after {
+    animation-duration: 0.01ms;
+  }
+}
+
+/*
+ * Keep the transition state above application content without changing
+ * the dashboard's existing stacking order.
+ */
+body.army-mode-transition::before,
+body.army-mode-transition::after {
+  border: 0;
+  box-shadow:
+    0 0 24px rgba(224, 201, 141, 0.18);
+}
+
+body.army-mode-transition [aria-pressed="true"] {
+  color: #e0c98d !important;
+  text-shadow: 0 0 8px rgba(224, 201, 141, 0.7);
+}
+
+body.army-mode .army-toast {
+  border: 1px solid rgba(224, 201, 141, 0.48);
+  background: rgba(16, 23, 16, 0.96);
+  color: #f4f1e7;
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.38),
+    inset 3px 0 0 #d8c38e;
+  backdrop-filter: blur(10px);
+}
+
+body.army-mode .army-toast[data-toast-type="success"] {
+  border-color: rgba(159, 181, 139, 0.68);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.38),
+    inset 3px 0 0 #9fb58b;
+}
+
+body.army-mode .army-toast[data-toast-type="warning"] {
+  border-color: rgba(224, 201, 141, 0.72);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.38),
+    inset 3px 0 0 #e0c98d;
+}
+
+body.army-mode .army-toast[data-toast-type="error"] {
+  border-color: rgba(201, 116, 91, 0.8);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.38),
+    inset 3px 0 0 #c9745b;
+}
+
+body.army-mode .army-toast[data-toast-type="success"] .border-current {
+  color: #9fb58b;
+}
+
+body.army-mode .army-toast[data-toast-type="warning"] .border-current {
+  color: #e0c98d;
+}
+
+body.army-mode .army-toast[data-toast-type="error"] .border-current {
+  color: #d28a72;
+}
+
 body:not(.army-mode) [class~="bg-main-bg"] { background-color: #ffffff !important; }
 body.army-mode [class~="bg-main-bg"] { background-color: rgba(20, 25, 20, 0.72) !important; }
 body.army-mode [class~="bg-\[#0a0a0a\]"] { background-color: #101510 !important; }
@@ -169,6 +324,135 @@ body.army-mode .army-login-card {
     radial-gradient(ellipse at 78% 36%, rgba(52, 69, 55, 0.94) 0 14%, transparent 14.5%),
     linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%);
   background-size: auto, 230px 280px, 280px 340px, 100% 100%;
+}
+
+/* The sign-in screen is always presented as an Army field console. */
+.army-login-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 76% 42%, rgba(151, 127, 70, 0.14), transparent 24rem),
+    linear-gradient(135deg, #0b120d 0%, #1a281b 48%, #0a100b 100%);
+}
+
+.army-login-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(115deg, transparent 0 38%, rgba(207, 190, 137, 0.07) 38.2% 38.8%, transparent 39% 100%),
+    linear-gradient(25deg, transparent 0 62%, rgba(207, 190, 137, 0.05) 62.2% 62.7%, transparent 63% 100%);
+  content: '';
+  pointer-events: none;
+}
+
+.army-login-atmosphere,
+.army-login-grid,
+.army-login-scanline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.army-login-grid {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(190, 200, 170, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190, 200, 170, 0.1) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to right, black, transparent 88%);
+}
+
+.army-login-scanline {
+  opacity: 0.12;
+  background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(220, 210, 170, 0.2) 6px, transparent 7px);
+  mix-blend-mode: screen;
+}
+
+.army-login-insignia {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border: 1px solid rgba(224, 201, 141, 0.7);
+  color: #e0c98d;
+  transform: rotate(45deg);
+}
+
+.army-login-insignia .material-symbols-outlined {
+  transform: rotate(-45deg);
+  font-size: 1.7rem;
+}
+
+.army-login-status-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 2px solid #101710;
+  border-radius: 999px;
+  background: #9fb58b;
+  box-shadow: 0 0 0 4px rgba(159, 181, 139, 0.16), 0 0 16px rgba(159, 181, 139, 0.8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .army-login-status-dot {
+    animation: army-status-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes army-status-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+/* Keep the authentication gateway tactical even when the app theme is Plain. */
+body:not(.army-mode) .army-login-shell {
+  background-color: #3f493d !important;
+  background-image:
+    linear-gradient(rgba(13, 18, 14, 0.5), rgba(13, 18, 14, 0.5)),
+    radial-gradient(ellipse at 12% 18%, rgba(30, 42, 35, 0.95) 0 7%, transparent 7.5%),
+    radial-gradient(ellipse at 68% 12%, rgba(77, 82, 72, 0.95) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 42% 42%, rgba(52, 69, 55, 0.96) 0 12%, transparent 12.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%) !important;
+  background-size: auto, 420px 520px, 500px 620px, 560px 700px, 100% 100% !important;
+  background-attachment: fixed !important;
+  color: #f4f1e7 !important;
+}
+
+body:not(.army-mode) .army-login-shell > div {
+  background-color: rgba(13, 18, 14, 0.84) !important;
+}
+
+body:not(.army-mode) .army-login-card {
+  background-color: rgba(13, 18, 14, 0.78) !important;
+  background-image:
+    linear-gradient(rgba(13, 18, 14, 0.64), rgba(13, 18, 14, 0.64)),
+    radial-gradient(ellipse at 18% 22%, rgba(77, 82, 72, 0.9) 0 9%, transparent 9.5%),
+    radial-gradient(ellipse at 78% 36%, rgba(52, 69, 55, 0.94) 0 14%, transparent 14.5%),
+    linear-gradient(35deg, #d1c9b0 0 8%, #4d5248 8% 22%, #344537 22% 39%, #706d63 39% 51%, #28382d 51% 69%, #b9b29d 69% 78%, #3e493d 78% 100%) !important;
+  background-size: auto, 230px 280px, 280px 340px, 100% 100% !important;
+}
+
+body:not(.army-mode) .army-login-shell [class*="text-white"] {
+  color: #f4f1e7 !important;
+}
+
+body:not(.army-mode) .army-login-shell [class*="bg-[#101710]"] {
+  background-color: rgba(16, 23, 16, 0.85) !important;
+}
+
+body:not(.army-mode) .army-login-shell input {
+  background-color: #182219 !important;
+  color: #f4f1e7 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body:not(.army-mode) .army-login-shell button[type="submit"] {
+  background-color: #d8c38e !important;
+  color: #172016 !important;
+}
+
+body:not(.army-mode) .army-login-shell button[type="submit"] .text-black {
+  color: #172016 !important;
 }
 
 /* Custom scrollbars for the field-console aesthetic */

@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
 } from 'react';
 
 import {
@@ -61,6 +62,9 @@ export const AppProvider: React.FC<{
         ? 'army'
         : 'plain';
     });
+
+  const hasMountedTheme =
+    useRef(false);
 
   const [currentView, setCurrentView] =
     useState<ActiveView>('dashboard');
@@ -1028,11 +1032,36 @@ export const AppProvider: React.FC<{
       'army-mode',
       theme === 'army'
     );
-
     localStorage.setItem(
       'sacrms_theme',
       theme
     );
+
+    if (!hasMountedTheme.current) {
+      hasMountedTheme.current = true;
+    } else {
+      document.body.classList.remove(
+        'army-mode-transition'
+      );
+      void document.body.offsetWidth;
+      document.body.classList.add(
+        'army-mode-transition'
+      );
+
+      const transitionTimer = window.setTimeout(() => {
+        document.body.classList.remove(
+          'army-mode-transition'
+        );
+      }, 900);
+
+      return () => {
+        window.clearTimeout(transitionTimer);
+        document.body.classList.remove(
+          'army-mode-transition'
+        );
+      };
+    }
+
   }, [theme]);
 
   // ============================================================

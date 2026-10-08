@@ -27,7 +27,8 @@ export const ToastContainer: React.FC = () => {
         return (
           <div
             key={toast.id}
-            className={`${style.bg} shadow-2xl p-4 flex items-start gap-3 pointer-events-auto animate-in fade-in slide-in-from-bottom-3 duration-200`}
+            data-toast-type={toast.type}
+            className={`army-toast ${style.bg} shadow-2xl p-4 flex items-start gap-3 pointer-events-auto animate-in fade-in slide-in-from-bottom-3 duration-200`}
           >
             <span className="text-[9px] font-black px-1.5 py-0.5 border border-current shrink-0 mt-0.5">
               {style.tag}
