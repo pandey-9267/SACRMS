@@ -1388,6 +1388,10 @@ export const AppProvider: React.FC<{
       weather: 'No data',
       temperature: 'N/A',
       profileImage: null,
+      warningThreshold: 45,
+      criticalThreshold: 20,
+      autoAlerts: true,
+      audioPings: false,
     };
 
   const currentCampResources =

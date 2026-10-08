@@ -55,7 +55,7 @@ const [headcount, setHeadcount] = useState(
    */
 
   useEffect(() => {
-    setHeadcount(currentCamp.personnel);
+    setHeadcount(String(currentCamp.personnel));
   }, [currentCamp.personnel]);
 
   /*
@@ -290,7 +290,7 @@ const invalidHeadcount =
                  * resource so an old quantity doesn't
                  * accidentally exceed the new stock.
                  */
-                setQuantity(0);
+                setQuantity('0');
               }}
               required
               disabled={isSubmitting}

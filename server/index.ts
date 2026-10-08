@@ -1180,11 +1180,19 @@ app.post(
       });
     }
 
+    const campId = req.user?.campId;
+    const requestedBy = req.user?.id;
+
+    if (!campId || !requestedBy) {
+      return res.status(401).json({
+        message: 'Authenticated user is not assigned to a camp',
+      });
+    }
+
     const resource =
       await Resource.findOne({
         _id: resourceId,
-        campId:
-          req.user?.campId,
+        campId,
       });
 
     if (!resource) {
@@ -1196,11 +1204,9 @@ app.post(
 
     const request =
       await SupplyRequest.create({
-        campId:
-          req.user?.campId,
+        campId,
 
-        requestedBy:
-          req.user?.id,
+        requestedBy,
 
         resourceId,
 
