@@ -6,357 +6,43 @@ import React, {
 } from 'react';
 
 import {
-  ResourceItem,
-  Camp,
   AlertItem,
-  UserProfile,
+  Camp,
+  ConsumptionDataPoint,
   EquipmentItem,
   MaintenanceTask,
   ResourceCategory,
+  ResourceItem,
   ResourceStatus,
   SupplyRequest,
-  SupplyRequestStatus,
   SupplyRequestAuditEntry,
-  ConsumptionDataPoint,
+  SupplyRequestStatus,
+  UserProfile,
 } from '../types';
+import {
+  ActiveView,
+  AppContextType,
+  PendingCampRequest,
+  ToastMessage,
+} from './contextTypes';
+import {
+  API_BASE_URL,
+  apiRequest,
+  getMediaUrl,
+} from './api';
+import { roleViews } from './permissions';
 
-export type ActiveView =
-  | 'dashboard'
-  | 'camps'
-  | 'resources'
-  | 'consumption'
-  | 'equipment'
-  | 'maintenance'
-  | 'alerts'
-  | 'reports'
-  | 'users'
-  | 'settings'
-  | 'requests';
-
-export interface ToastMessage {
-  id: string;
-  type: 'success' | 'warning' | 'error' | 'info';
-  title: string;
-  message: string;
-}
-
-export interface PendingCampRequest {
-  id: string;
-  campId: string;
-  campName: string;
-  requestedBy: string;
-  resourceName: string;
-  quantity: number;
-  unit: string;
-  urgency: 'Routine' | 'Urgent' | 'Critical';
-  reason: string;
-}
-
-interface AppContextType {
-  theme: 'plain' | 'army';
-  setTheme: (theme: 'plain' | 'army') => void;
-
-  currentView: ActiveView;
-  setCurrentView: (view: ActiveView) => void;
-  canAccessView: (view: ActiveView) => boolean;
-
-  selectedCampId: string;
-  setSelectedCampId: (campId: string) => void;
-
-  currentUser: UserProfile | null;
-  setCurrentUser: (user: UserProfile | null) => void;
-
-  backendAvailable: boolean;
-  retryBackendConnection: () => void;
-
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => void;
-  logout: () => void;
-
-  createCampProfile: (camp: {
-    name: string;
-    code: string;
-    type: Camp['type'];
-    location: string;
-    commander: string;
-    personnel: number;
-    readinessScore: number;
-    weather: string;
-    temperature: string;
-    profileImage?: File | null;
-  }) => Promise<{
-    id: string;
-    profileEmail: string;
-    profilePassword: string;
-  } | null>;
-
-  deleteCampProfile: (campId: string) => Promise<void>;
-  resetAllData: () => void;
-
-  camps: Camp[];
-  currentCamp: Camp;
-
-  resources: ResourceItem[];
-  currentCampResources: ResourceItem[];
-
-  addResource: (
-    resource: Omit<ResourceItem, 'id' | 'status' | 'estDays'>
-  ) => void;
-
-  updateResource: (
-    id: string,
-    updates: Partial<ResourceItem>
-  ) => void;
-
-  deleteResource: (id: string) => void;
-
-  restockResource: (
-    id: string,
-    addedAmount: number,
-    notes?: string
-  ) => void;
-
-  transferResource: (
-    resourceId: string,
-    targetCampId: string,
-    amount: number
-  ) => void;
-
-  consumptionHistory: ConsumptionDataPoint[];
-
-  recordConsumption: (entry: {
-    resourceName: string;
-    category: ResourceCategory;
-    date: string;
-    quantity: number;
-    headcount: number;
-    purpose: string;
-    unit: string;
-  }) => Promise<void>;
-
-  isRecordConsumptionModalOpen: boolean;
-  setIsRecordConsumptionModalOpen: (open: boolean) => void;
-
-  alerts: AlertItem[];
-  acknowledgeAlert: (id: string) => void;
-  dispatchResupplyForAlert: (id: string) => void;
-
-  equipment: EquipmentItem[];
-
-  addEquipment: (
-    equipment: Omit<EquipmentItem, 'id'>
-  ) => void;
-
-  updateEquipmentStatus: (
-    id: string,
-    status: EquipmentItem['status']
-  ) => void;
-
-  isAddEquipmentModalOpen: boolean;
-  setIsAddEquipmentModalOpen: (open: boolean) => void;
-
-  maintenanceTasks: MaintenanceTask[];
-
-  updateTaskStatus: (
-    id: string,
-    status: MaintenanceTask['status']
-  ) => void;
-
-  addMaintenanceTask: (
-    task: Omit<MaintenanceTask, 'id'>
-  ) => Promise<void>;
-
-  supplyRequests: SupplyRequest[];
-
-  submitSupplyRequest: (
-    request: Omit<
-      SupplyRequest,
-      | 'id'
-      | 'status'
-      | 'createdAt'
-      | 'requestedBy'
-      | 'campId'
-      | 'campName'
-      | 'auditLog'
-    >
-  ) => Promise<void>;
-
-  updateSupplyRequestStatus: (
-    id: string,
-    status: SupplyRequestStatus,
-    details?: {
-      reason?: string;
-      carrier?: string;
-      eta?: string;
-    }
-  ) => Promise<void>;
-
-  isAddResourceModalOpen: boolean;
-  setIsAddResourceModalOpen: (open: boolean) => void;
-
-  isQuickRestockModalOpen: boolean;
-  setIsQuickRestockModalOpen: (open: boolean) => void;
-
-  activeRestockResource: ResourceItem | null;
-
-  setActiveRestockResource: (
-    res: ResourceItem | null
-  ) => void;
-
-  isHelpModalOpen: boolean;
-  setIsHelpModalOpen: (open: boolean) => void;
-
-  isAppsDrawerOpen: boolean;
-  setIsAppsDrawerOpen: (open: boolean) => void;
-
-  isDispatchModalOpen: boolean;
-  setIsDispatchModalOpen: (open: boolean) => void;
-
-  pendingCampRequests: PendingCampRequest[];
-
-  setPendingCampRequests: (
-    requests:
-      | PendingCampRequest[]
-      | ((prev: PendingCampRequest[]) => PendingCampRequest[])
-  ) => void;
-
-  clearPendingCampRequest: (id: string) => void;
-
-  toasts: ToastMessage[];
-
-  addToast: (
-    type: ToastMessage['type'],
-    title: string,
-    message: string
-  ) => void;
-
-  removeToast: (id: string) => void;
-}
+export type {
+  ActiveView,
+  AppContextType,
+  PendingCampRequest,
+  ToastMessage,
+} from './contextTypes';
+export { apiRequest } from './api';
 
 const AppContext = createContext<
   AppContextType | undefined
 >(undefined);
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
-
-const getMediaUrl = (value?: string | null) => {
-  if (!value) return '';
-
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  return `${API_ORIGIN}${value.startsWith('/') ? value : `/${value}`}`;
-};
-
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token =
-    sessionStorage.getItem('sacrms_token');
-
-  const isFormData =
-    options.body instanceof FormData;
-
-  const response = await fetch(
-    `${API_BASE_URL}${path}`,
-    {
-      ...options,
-      headers: {
-        ...(isFormData
-          ? {}
-          : {
-            'Content-Type':
-              'application/json',
-          }),
-
-        ...(token
-          ? {
-            Authorization:
-              `Bearer ${token}`,
-          }
-          : {}),
-
-        ...options.headers,
-      },
-    }
-  );
-
-  const payload =
-    await response.json().catch(
-      () => null
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      payload?.message ||
-      `Request failed with status ${response.status}`
-    );
-  }
-
-  return payload as T;
-}
-
-
-
-const roleViews: Record<
-  UserProfile['role'],
-  ActiveView[]
-> = {
-  Admin: [
-    'dashboard',
-    'camps',
-    'resources',
-    'consumption',
-    'equipment',
-    'maintenance',
-    'alerts',
-    'reports',
-    'users',
-    'settings',
-    'requests',
-  ],
-
-  Logistics: [
-    'dashboard',
-    'resources',
-    'consumption',
-    'equipment',
-    'maintenance',
-    'alerts',
-    'reports',
-    'settings',
-    'requests',
-  ],
-
-  Maintenance: [
-    'dashboard',
-    'camps',
-    'equipment',
-    'maintenance',
-    'alerts',
-    'reports',
-  ],
-
-  'Maintenance Supervisor': [
-    'dashboard',
-    'camps',
-    'equipment',
-    'maintenance',
-    'alerts',
-    'reports',
-  ],
-
-  Commander: [
-    'dashboard',
-    'camps',
-    'alerts',
-    'reports',
-  ],
-};
 
 export const AppProvider: React.FC<{
   children: React.ReactNode;
