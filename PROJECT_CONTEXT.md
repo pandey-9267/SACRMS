@@ -237,7 +237,7 @@ The canonical UI types are in `frontend/src/types/index.ts`.
 ```text
 id, name, type, code, personnel, readinessScore, location,
 commander, status, weather, temperature, profileImage,
-warningThreshold, criticalThreshold, autoAlerts, audioPings
+warningThreshold, criticalThreshold, autoAlerts
 ```
 
 Camp types are `Live`, `Reserve`, and `Forward Base`. Camp status is `Optimal`, `Warning`, or `Standby`.

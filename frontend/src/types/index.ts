@@ -49,7 +49,6 @@ export interface Camp {
   warningThreshold: number;
   criticalThreshold: number;
   autoAlerts: boolean;
-  audioPings: boolean;
 }
 
 export interface AlertItem {

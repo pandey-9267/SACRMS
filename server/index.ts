@@ -566,7 +566,6 @@ app.patch('/api/camps/:id/settings', requireAuth, async (req: AuthRequest, res: 
       warningThreshold,
       criticalThreshold,
       autoAlerts,
-      audioPings,
     } = req.body;
 
     // Validate threshold values
@@ -610,7 +609,6 @@ app.patch('/api/camps/:id/settings', requireAuth, async (req: AuthRequest, res: 
         warningThreshold,
         criticalThreshold,
         autoAlerts: Boolean(autoAlerts),
-        audioPings: Boolean(audioPings),
       },
       {
         new: true,
@@ -635,7 +633,6 @@ app.patch('/api/camps/:id/settings', requireAuth, async (req: AuthRequest, res: 
           warningThreshold: camp.warningThreshold,
           criticalThreshold: camp.criticalThreshold,
           autoAlerts: camp.autoAlerts,
-          audioPings: camp.audioPings,
         },
       });
     }

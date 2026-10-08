@@ -78,6 +78,13 @@ export interface AppContextType {
   resetAllData: () => void;
   camps: Camp[];
   currentCamp: Camp;
+  updateCampSettings: (
+    campId: string,
+    settings: Pick<
+      Camp,
+      'warningThreshold' | 'criticalThreshold' | 'autoAlerts'
+    >
+  ) => void;
   resources: ResourceItem[];
   currentCampResources: ResourceItem[];
   addResource: (

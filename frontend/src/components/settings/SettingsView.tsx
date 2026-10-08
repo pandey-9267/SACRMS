@@ -9,6 +9,7 @@ export const SettingsView: React.FC = () => {
   addToast,
   currentCamp,
   camps,
+  updateCampSettings,
 } = useApp();
 
   const [warningThreshold, setWarningThreshold] =
@@ -19,9 +20,6 @@ export const SettingsView: React.FC = () => {
 
   const [autoAlerts, setAutoAlerts] =
     useState(true);
-
-  const [audioPings, setAudioPings] =
-    useState(false);
 
   const [saving, setSaving] =
     useState(false);
@@ -46,9 +44,6 @@ export const SettingsView: React.FC = () => {
       currentCamp.autoAlerts ?? true
     );
 
-    setAudioPings(
-      currentCamp.audioPings ?? false
-    );
   }, [currentCamp]);
 
   const handleSave = async (
@@ -130,7 +125,6 @@ export const SettingsView: React.FC = () => {
     warningThreshold: number;
     criticalThreshold: number;
     autoAlerts: boolean;
-    audioPings: boolean;
   };
 }>(
   `/camps/${currentCamp.id}/settings`,
@@ -145,16 +139,17 @@ export const SettingsView: React.FC = () => {
         numericCriticalThreshold,
 
       autoAlerts,
-
-      audioPings,
     }),
   }
 );
 
-      const updatedCamp =
-        data.camp;
-
-    
+      updateCampSettings(currentCamp.id, {
+        warningThreshold:
+          data.camp.warningThreshold,
+        criticalThreshold:
+          data.camp.criticalThreshold,
+        autoAlerts: data.camp.autoAlerts,
+      });
 
       addToast(
         'success',
@@ -323,23 +318,6 @@ export const SettingsView: React.FC = () => {
 
               <span className="text-white/80">
                 Automatically generate emergency restock tickets when stock falls below critical
-              </span>
-            </label>
-
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={audioPings}
-                onChange={(e) =>
-                  setAudioPings(
-                    e.target.checked
-                  )
-                }
-                className="w-3.5 h-3.5 bg-[#181818] border-white/30 checked:bg-white text-black"
-              />
-
-              <span className="text-white/80">
-                Audio telemetry alerts on priority incident creation
               </span>
             </label>
 

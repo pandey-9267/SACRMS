@@ -140,10 +140,6 @@ const campSchema = new Schema(
       default: true,
     },
 
-    audioPings: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,

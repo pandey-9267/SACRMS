@@ -448,11 +448,6 @@ export const AppProvider: React.FC<{
                   typeof camp.autoAlerts === 'boolean'
                     ? camp.autoAlerts
                     : true,
-
-                audioPings:
-                  typeof camp.audioPings === 'boolean'
-                    ? camp.audioPings
-                    : false,
               })
             );
 
@@ -1106,7 +1101,6 @@ export const AppProvider: React.FC<{
       warningThreshold: 45,
       criticalThreshold: 20,
       autoAlerts: true,
-      audioPings: false,
     };
 
   const currentCampResources =
@@ -1115,6 +1109,22 @@ export const AppProvider: React.FC<{
         resource.campId ===
         currentCamp.id
     );
+
+  const updateCampSettings = (
+    campId: string,
+    settings: Pick<
+      Camp,
+      'warningThreshold' | 'criticalThreshold' | 'autoAlerts'
+    >
+  ) => {
+    setCamps((previousCamps) =>
+      previousCamps.map((camp) =>
+        camp.id === campId
+          ? { ...camp, ...settings }
+          : camp
+      )
+    );
+  };
 
   // ============================================================
   // RESOURCE HELPERS
@@ -1216,7 +1226,7 @@ export const AppProvider: React.FC<{
               resource.campId
           );
 
-        if (!camp) return;
+        if (!camp || !camp.autoAlerts) return;
 
         const stock =
           Number(
@@ -1316,7 +1326,7 @@ export const AppProvider: React.FC<{
               item.campId
           );
 
-        if (!camp) return;
+        if (!camp || !camp.autoAlerts) return;
 
         const status =
           String(
@@ -1489,7 +1499,7 @@ export const AppProvider: React.FC<{
               task.campId
           );
 
-        if (!camp) return;
+        if (!camp || !camp.autoAlerts) return;
 
         const status =
           String(
@@ -2412,11 +2422,6 @@ export const AppProvider: React.FC<{
             typeof camp.autoAlerts === 'boolean'
               ? camp.autoAlerts
               : true,
-
-          audioPings:
-            typeof camp.audioPings === 'boolean'
-              ? camp.audioPings
-              : false,
         };
 
         const newProfile:
@@ -4300,6 +4305,7 @@ export const AppProvider: React.FC<{
 
         camps,
         currentCamp,
+        updateCampSettings,
 
         resources,
         currentCampResources,
