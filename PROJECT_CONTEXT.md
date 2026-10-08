@@ -1,410 +1,532 @@
-# SACRMS Project Context for AI Assistants
+# SACRMS Project Context
 
-## 1. Project Identity
+This document is the working reference for developers and AI assistants modifying this repository. It describes the implementation that exists in the repository, not an idealized production design.
 
-SACRMS means **Smart Army Camp Resource Management System**.
+## 1. Project identity
 
-It is a frontend prototype for centralized military camp logistics. The system represents one headquarters admin managing several camps. Camp logistics users submit supply requirements to headquarters. Headquarters reviews, approves, dispatches, and tracks those requirements until the requesting camp confirms receipt.
+**SACRMS** means **Smart Army Camp Resource Management System**.
 
-The React screens are organized under `frontend/`, and the repository also contains a Node.js/Express/MongoDB API under `server/`. The API provides server-side authentication, role checks, camp scoping, supply-request transitions, stock movement, and audit records. The existing screens still use their original local demo state until the frontend data layer is migrated to the API and a MongoDB Atlas URI is configured.
+SACRMS is a React/Vite operations dashboard backed by an Express/Mongoose API. It models a headquarters and multiple military camps that manage:
 
-## 2. Main Business Goal
+- camp readiness and camp settings;
+- resource inventory and stock levels;
+- consumption records;
+- equipment and maintenance work;
+- operational alerts;
+- inter-camp supply requests;
+- reports and user/camp administration;
+- authenticated API access and audit logging.
 
-The application should help command personnel answer these questions:
+The UI is a dark, military-style dashboard with two themes (`plain` and `army`). The application is designed as a portfolio/demo system and is not a certified military or safety-critical platform.
 
-- What resources are available at each camp?
-- Which resources are near or below minimum levels?
-- Which camps need supplies?
-- Has headquarters approved and dispatched a request?
-- Has the requesting camp received the shipment?
-- What equipment and maintenance work affect readiness?
-- What alerts require attention?
-
-The most important operational workflow is:
-
-```text
-Camp submits requirement
-        -> HQ Admin reviews
-        -> HQ approves or rejects
-        -> HQ dispatches with carrier and ETA
-        -> Requesting camp confirms receipt
-```
-
-Supply request statuses are:
+## 2. Repository layout
 
 ```text
-Submitted -> Approved -> In Transit -> Received
-Submitted/Approved -> Rejected
+.
+├── frontend/
+│   ├── index.html
+│   ├── metadata.json
+│   ├── vite.config.ts
+│   ├── .env.development
+│   ├── .env.production
+│   ├── assets/phot.jpeg
+│   ├── public/assets/phot.jpeg
+│   └── src/
+│       ├── App.tsx
+│       ├── main.tsx
+│       ├── index.css
+│       ├── types/index.ts
+│       ├── data/mockData.ts
+│       ├── context/AppContext.tsx
+│       └── components/
+├── server/
+│   ├── index.ts
+│   ├── seed.ts
+│   ├── config/db.ts
+│   ├── middleware/auth.ts
+│   ├── models/models.ts
+│   └── .env.example
+├── uploads/camps/
+├── package.json
+├── tsconfig.json
+├── README.md
+└── PROJECT_CONTEXT.md
 ```
 
-## 3. Technology
+`node_modules/` and generated build output are not source files. Do not edit them.
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS v4
-- Material Symbols icons loaded by the HTML/CSS setup
-- Browser `localStorage` for demo persistence
-- Node.js + Express API in `server/`
-- MongoDB + Mongoose
-- JWT authentication and bcrypt password hashing
+## 3. Technology and runtime
 
-Important commands:
+| Area | Implementation |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Styling | Tailwind CSS v4 through `@tailwindcss/vite`, custom CSS |
+| Icons/fonts | Material Symbols, Barlow, Barlow Condensed, JetBrains Mono |
+| Frontend state | `AppContext` and React hooks |
+| API | Node.js, Express 5, TypeScript executed with `tsx` |
+| Database | MongoDB through Mongoose 9 |
+| Authentication | bcrypt password hashes plus JWT bearer tokens |
+| Uploads | Multer disk storage under `uploads/camps/` |
+| API proxy | Vite proxies `/api` to `http://localhost:4000` |
+| Production API URL | `https://sacrms.onrender.com/api` in `frontend/.env.production` |
+
+The package is an ES module package (`"type": "module"`). The root TypeScript configuration includes both frontend and server files and uses `noEmit`.
+
+## 4. Commands
+
+Run these from the repository root:
 
 ```bash
 npm install
-npm run dev       # Vite development server on port 3000
-npm run lint      # TypeScript check: tsc --noEmit
-npm run build     # Production build
-npm run preview   # Preview production build
-npm run clean     # Windows-safe removal of dist/
+npm run dev          # Vite development server, port 3000
+npm run server       # Express API, port 4000
+npm run server:seed  # Destructive database seed; deletes selected collections first
+npm run lint         # tsc --noEmit
+npm run build        # Vite production build
+npm run preview      # Preview the frontend build
+npm run clean        # Removes dist/
 ```
 
-## 4. Login Identities
+For local development, run the frontend and server in separate terminals:
 
-The intended active demo identities are exactly four:
+```text
+Frontend: http://localhost:3000
+Backend:  http://localhost:4000
+Health:   http://localhost:4000/api/health
+```
 
-| Identity | Email | Password | Camp scope |
+The frontend requires the backend to be reachable. `AppContext` polls `/api/health` every five seconds and exposes `backendAvailable`. Login is blocked while the backend is offline.
+
+## 5. Environment configuration
+
+### Frontend
+
+`frontend/.env.development` currently contains:
+
+```text
+VITE_API_URL=http://localhost:4000/api
+```
+
+`frontend/.env.production` currently contains:
+
+```text
+VITE_API_URL=https://sacrms.onrender.com/api
+```
+
+`VITE_API_URL` must point to the API base path ending in `/api`. `AppContext` derives the API origin from this value to resolve uploaded image paths.
+
+### Server
+
+Copy `server/.env.example` to a server `.env` file and provide real values:
+
+```text
+PORT=4000
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=<long-random-secret>
+CLIENT_ORIGIN=http://localhost:3000
+```
+
+Never commit `.env`, database credentials, JWT secrets, real personnel data, or real operational data. The code currently falls back to `development-secret` when `JWT_SECRET` is absent; this fallback is for development only and must be removed or blocked in production.
+
+## 6. Application startup and data flow
+
+1. `frontend/src/main.tsx` mounts `App` inside `StrictMode`.
+2. `App.tsx` wraps the UI in `AppProvider`.
+3. `AppContext.tsx` owns authentication, API calls, state, permissions, and mutations.
+4. The backend connection check calls `GET /api/health`.
+5. After a successful login, the context stores the JWT and user in `sessionStorage`.
+6. When authenticated and online, the context loads camps, resources, consumption, requests, equipment, and maintenance records from the API.
+7. UI actions call the API and update local React state after successful responses.
+8. The root app selects the active dashboard view and renders the global HQ pending-request modal and toast container.
+
+The exported `apiRequest<T>()` helper:
+
+- reads `sacrms_token` from `sessionStorage`;
+- sends `Authorization: Bearer <token>`;
+- sets JSON content type unless the body is `FormData`;
+- parses JSON responses;
+- throws an `Error` using the API `message` when the response is not successful.
+
+## 7. Frontend navigation and screens
+
+`ActiveView` is defined in `frontend/src/context/AppContext.tsx`:
+
+| View | Component | Main responsibility |
+|---|---|---|
+| `dashboard` | `DashboardView.tsx` | Operational readiness overview, KPIs, stock and alerts |
+| `camps` | `CampsView.tsx` | Camp list, camp profile, create/delete and settings |
+| `resources` | `ResourceInventoryView.tsx` | Inventory search, filtering, stock actions and CSV export |
+| `consumption` | `ConsumptionView.tsx` | Consumption history, recording and analytics |
+| `equipment` | `EquipmentView.tsx` | Equipment assets, status and health |
+| `maintenance` | `MaintenanceView.tsx` | Maintenance tasks and work-order status |
+| `alerts` | `AlertsView.tsx` | Alerts, acknowledgement and resupply actions |
+| `reports` | `ReportsView.tsx` | Operational summaries and report views |
+| `users` | `UsersView.tsx` | Active user/camp profile administration display |
+| `settings` | `SettingsView.tsx` | Theme and camp-specific settings |
+| `requests` | `SupplyRequestsView.tsx` | Camp requests and HQ request queue |
+
+Shared layout:
+
+- `Sidebar.tsx`: role-filtered navigation and alert count.
+- `TopHeader.tsx`: camp selection, notifications, theme, profile and shortcuts.
+- `App.tsx`: view routing, persisted active view, authentication gate and global overlays.
+
+Shared modals:
+
+| File | Purpose |
+|---|---|
+| `AddResourceModal.tsx` | Add inventory |
+| `QuickRestockModal.tsx` | Increase resource stock |
+| `AddEquipmentModal.tsx` | Add equipment |
+| `RecordConsumptionModal.tsx` | Record resource consumption |
+| `ResupplyDispatchModal.tsx` | Resupply/dispatch flow |
+| `AppsDrawer.tsx` | Application shortcut drawer |
+| `HelpModal.tsx` | Help content |
+| `ToastContainer.tsx` | Success, warning, error and info notifications |
+
+## 8. Roles and frontend permissions
+
+The role-to-view map is defined in `AppContext.tsx`:
+
+| Role | Accessible views |
+|---|---|
+| `Admin` | All views |
+| `Logistics` | Dashboard, resources, consumption, equipment, maintenance, alerts, reports, settings, requests |
+| `Maintenance` | Dashboard, camps, equipment, maintenance, alerts, reports |
+| `Maintenance Supervisor` | Dashboard, camps, equipment, maintenance, alerts, reports |
+| `Commander` | Dashboard, camps, alerts, reports |
+
+The backend user schema currently allows `Admin`, `Logistics`, `Maintenance`, and `Maintenance Supervisor`. `Commander` exists in the frontend type/permission model but is not accepted by the current Mongoose user schema.
+
+Frontend visibility is not a security boundary. Every protected backend route must continue to enforce authentication, role, and camp scope on the server.
+
+## 9. Authentication and demo identities
+
+The real login path is `POST /api/auth/login`. Successful login returns an eight-hour JWT and a user profile. The token is stored as `sacrms_token` in `sessionStorage`; the profile is stored as `sacrms_user`.
+
+### Seeded database identity
+
+The current `server/seed.ts` deletes users, resources, consumption records, and camps, then creates only this user:
+
+| Role | Email | Password | Camp |
 |---|---|---|---|
-| HQ Admin | `commander@logistics.node` | `SACRMS-ADMIN` | Headquarters; currently assigned to `camp-alpha` as the central stock source |
-| Camp Alpha Leader | `logistics.lead@camp-alpha.mil` | `SACRMS-CAMP-ALPHA` | Camp Alpha |
-| Camp Bravo Leader | `logistics.lead@camp-bravo.mil` | `SACRMS-CAMP-BRAVO` | Camp Bravo |
-| Camp Charlie Leader | `logistics.lead@camp-charlie.mil` | `SACRMS-CAMP-CHARLIE` | Camp Charlie |
+| HQ Admin | `commander@logistics.node` | `SACRMS-ADMIN` | `null` in the current seed |
 
-The login screen also provides four instant demo profile buttons. Users must sign out before using another identity. The header and Users screen do not impersonate other accounts.
+The current seed script does **not** create camps, logistics users, equipment, maintenance tasks, supply requests, or audit logs.
 
-Maintenance credential entries and extra role shortcut paths were removed from the active demo login flow. The shared type model still contains maintenance-related role types because maintenance screens and permissions remain part of the prototype.
+### Camp-created logistics identity
 
-## 5. Roles and Permissions
+When an Admin creates a camp through `POST /api/camps`, the backend creates a Logistics leader. The frontend derives the email as:
 
-### HQ Admin
+```text
+logistics.lead@<normalized-camp-name>.mil
+```
 
-- Full access to all navigation views.
-- Sees all camp supply requests.
-- Approves or rejects submitted requests.
-- Dispatches approved requests.
-- Can select camps in the header for viewing camp data.
-- Receives the global pending camp request popup.
-- Acts as the central stock dispatcher. In the current demo, the admin profile's `campId` identifies the source stock camp.
+The backend generates a temporary password and returns it to the Admin. The exact password is not fixed in source code. The UI may display it once for the Admin.
 
-### Camp Logistics
+Therefore, values such as `logistics.lead@camp-alpha.mil` are valid only if a Camp Alpha profile has actually been created in the connected database. They are not created by the current seed script.
 
-- Sees only the camp assigned to the logged-in profile.
-- Can view and modify camp resources allowed by the prototype.
-- Can submit supply requirements.
-- Sees only supply requests belonging to the assigned camp.
-- Can confirm receipt only for its own request while the request is `In Transit`.
-- Cannot approve, reject, or dispatch requests.
+## 10. Shared frontend data models
 
-### Maintenance roles
+The canonical UI types are in `frontend/src/types/index.ts`.
 
-Maintenance and Maintenance Supervisor permissions remain represented in `roleViews` and shared types for equipment and work-order screens, but they are not among the four active login identities listed above.
+### Camp
 
-### Access enforcement
+`Camp` contains:
 
-Navigation visibility is controlled by `canAccessView` and the `roleViews` map in `frontend/src/context/AppContext.tsx`. Business actions also check the current role before changing state. A future backend must repeat these checks server-side; frontend checks are not security.
+```text
+id, name, type, code, personnel, readinessScore, location,
+commander, status, weather, temperature, profileImage,
+warningThreshold, criticalThreshold, autoAlerts, audioPings
+```
 
-## 6. Supply Request Behavior
+Camp types are `Live`, `Reserve`, and `Forward Base`. Camp status is `Optimal`, `Warning`, or `Standby`.
 
-### Camp submission
-
-`submitSupplyRequest` in `frontend/src/context/AppContext.tsx`:
-
-1. Allows only a Logistics user to submit.
-2. Creates a request with a unique ID and `Submitted` status.
-3. Adds requester, camp, quantity, unit, urgency, reason, timestamp, and audit log entry.
-4. Adds an operational alert for HQ.
-5. Adds the request to `pendingCampRequests`.
-6. Persists the request, alert, and pending queue to `localStorage`.
-
-The form is in `frontend/src/components/requests/SupplyRequestsView.tsx`.
-
-### HQ approval
-
-The HQ Admin sees all requests in the Central Queue. For a `Submitted` request, Admin can select **Approve**, which changes the status to `Approved` and records the actor and timestamp in the audit log.
-
-Approval does not change inventory.
-
-### HQ rejection
-
-Admin can reject a `Submitted` or `Approved` request. A rejection reason is required by the current browser prompt. The request becomes `Rejected`, stores the reason, records the actor and timestamp, and is removed from the pending queue.
-
-### HQ dispatch
-
-Admin can dispatch only an `Approved` request. The current UI asks for carrier/transport method and ETA using browser prompts.
-
-Dispatch:
-
-1. Searches the admin's source camp inventory.
-2. Matches the requested category and normalized exact resource name.
-3. Requires enough stock for the requested quantity.
-4. Deducts the quantity from the source resource.
-5. Recalculates resource status and estimated runway days.
-6. Stores `sourceCampId` and `sourceResourceId` on the request.
-7. Changes status to `In Transit`.
-8. Records carrier, ETA, actor, timestamp, and audit history.
-
-If there is no exact matching resource or insufficient stock, dispatch is blocked and inventory is unchanged.
-
-### Camp receipt
-
-The requesting Camp Logistics user sees **Confirm Received** only when:
-
-- the request status is `In Transit`, and
-- the request belongs to the logged-in user's current camp.
-
-Receipt:
-
-1. Finds the destination resource using destination camp, category, and exact normalized resource name.
-2. Adds the requested quantity up to the destination max capacity.
-3. Recalculates status and estimated runway days.
-4. Creates a destination resource if no matching destination resource exists and a recorded source resource is available.
-5. Changes status to `Received`.
-6. Records received timestamp, actor, and audit history.
-7. Removes the request from the pending HQ queue.
-
-Therefore, in the diesel example, HQ dispatch deducts diesel from the configured HQ source stock, and the requesting camp's diesel inventory increases when that camp confirms receipt.
-
-## 7. Important Inventory Rules
+### Resource
 
 `ResourceItem` contains:
 
-- `id`
-- `name`
-- `category`
-- `currentStock`
-- `unit`
-- `minLevel`
-- `maxCapacity`
-- `burnRatePerPersonPerDay`
-- `estDays`
-- `status`
-- `campId`
-- icon, location, SKU, and last restocked date
+```text
+id, name, category, currentStock, unit, minLevel, maxCapacity,
+burnRatePerPersonPerDay, estDays, status, campId, icon,
+lastRestocked, location, sku
+```
 
-Status calculation:
+Resource categories are `Water`, `Fuel`, `Food`, `Medicine`, `Supplies`, `Ammunition`, and `Power`.
 
-- `Critical` when stock is at/below minimum or at 20% capacity or less.
-- `Warning` when stock is at 45% capacity or less.
-- `Healthy` otherwise.
+### Supply request
 
-Runway calculation is approximately:
+`SupplyRequest` contains:
+
+```text
+id, campId, campName, category, resourceName, quantity, unit,
+urgency, reason, status, requestedBy, createdAt, auditLog
+```
+
+Optional fields include `reviewedBy`, `rejectionReason`, `carrier`, `eta`, `receivedAt`, `sourceCampId`, and `sourceResourceId`.
+
+Request statuses are:
+
+```text
+Submitted -> Approved -> In Transit -> Received
+Submitted -> Rejected
+Approved  -> Rejected
+```
+
+## 11. Inventory and consumption rules
+
+The frontend calculates resource status from stock and capacity:
+
+- `Critical`: at/below the minimum level or at/below the critical capacity threshold;
+- `Warning`: at/below the warning capacity threshold;
+- `Healthy`: otherwise.
+
+Estimated runway is approximately:
 
 ```text
 current stock / (burn rate per person per day * camp personnel)
 ```
 
-Resource mutations include adding, updating, deleting, restocking, transferring, dispatching, and receiving. Whenever changing stock, preserve status and `estDays` consistency.
+Any stock mutation must keep `currentStock`, `status`, and `estDays` consistent. Stock must not become negative or exceed `maxCapacity` unless the business rule explicitly permits it.
 
-## 8. Pending HQ Request Alert
+Consumption records contain camp, resource name/category, date, quantity, headcount, purpose, unit, and recording user. The API validates non-negative quantity and headcount.
 
-The request queue is stored under `sacrms_pending_requests`.
+## 12. Supply-request workflow
 
-The global modal in `frontend/src/App.tsx` is shown only when:
+### Frontend behavior
 
-- the user is authenticated,
-- the current user role is `Admin`, and
-- at least one pending request is available and not dismissed in the current session.
-
-Closing the modal or choosing **Review Later** hides that item for the current session only. The item remains in `localStorage` and appears again after the admin logs in later.
-
-The request is removed from the persistent queue only after a status action such as approval, rejection, or receipt. Review Request navigates to the Supply Requests screen but does not resolve the request.
-
-## 9. Application State and Persistence
-
-`frontend/src/context/AppContext.tsx` is the main source of truth for the current React demo. It provides:
-
-- authentication and current user
-- theme
-- current view
-- selected camp
-- camps
-- resources
-- alerts
-- equipment
-- maintenance tasks
-- supply requests
-- pending camp request queue
-- modal state
-- toast notifications
-- action functions and authorization checks
-
-The API endpoints currently include:
+The intended workflow is:
 
 ```text
-POST  /api/auth/login
-GET   /api/health
-GET   /api/camps
-POST  /api/camps                 # HQ Admin creates camp + leader credentials
-GET   /api/resources
-POST  /api/requests
-GET   /api/requests
-PATCH /api/requests/:id/status
-GET   /api/equipment
-GET   /api/maintenance
+Camp Logistics submits request
+        -> Admin approves or rejects
+        -> Admin dispatches
+        -> Camp Logistics confirms receipt
 ```
 
-Current `localStorage` keys include:
+The HQ pending-request overlay is rendered by `App.tsx` for Admin users when `pendingCampRequests` contains an unresolved request. Review navigates to the Requests view; it does not itself resolve the request.
 
-```text
-sacrms_user
-sacrms_theme
-sacrms_camps
-sacrms_resources
-sacrms_alerts
-sacrms_equipment
-sacrms_tasks
-sacrms_supply_requests
-sacrms_pending_requests
-```
+### Backend transition rules
 
-Data is local to one browser profile. Clearing site storage resets the demo to seed data.
+`PATCH /api/requests/:id/status` permits:
 
-## 10. Important Files
+| Current status | Next status | Role |
+|---|---|---|
+| `Submitted` | `Approved` | Admin |
+| `Submitted` | `Rejected` | Admin |
+| `Approved` | `In Transit` | Admin |
+| `In Transit` | `Received` | Logistics user belonging to the request camp |
 
-```text
-frontend/src/App.tsx
-  Root shell, view routing, global modal rendering, HQ pending request popup.
+Dispatch stores carrier and ETA. Receipt looks up the destination resource by request camp, resource ID, and resource name, adds the quantity capped at `maxCapacity`, stores `receivedAt`, and writes audit entries.
 
-frontend/src/context/AppContext.tsx
-  Main state store, permissions, login, request lifecycle, inventory mutations, persistence.
+### Important implementation distinction
 
-frontend/src/types/index.ts
-  Shared TypeScript models and status unions.
+The current backend intentionally does **not** deduct stock during Admin dispatch. The source comments explain that the database has camp resources but no separate HQ warehouse. The backend adds destination stock only when the request is received.
 
-frontend/src/data/mockData.ts
-  Seed camps, resources, alerts, users, equipment, maintenance tasks, and demo data.
+The frontend contains a richer source-resource dispatch concept in parts of `AppContext.tsx` and the demo workflow. Do not assume those two implementations are equivalent. Any future inventory-transfer change must be designed and tested across both layers, ideally by introducing an explicit HQ warehouse/source inventory model.
 
-frontend/src/components/auth/LoginView.tsx
-  Login form and four demo identity buttons.
+## 13. Backend API
 
-frontend/src/components/requests/SupplyRequestsView.tsx
-  Camp submission form, HQ queue, approval/rejection/dispatch controls, receipt confirmation.
+All routes are under `/api`. Protected routes require a JWT. Role restrictions below are enforced by `requireRole`.
 
-frontend/src/components/resources/ResourceInventoryView.tsx
-  Searchable and filterable inventory table, restocking, resource actions, CSV export.
+### Health and authentication
 
-frontend/src/components/layout/TopHeader.tsx
-  Navigation, alerts, camp selector, dispatch shortcut, theme, profile menu.
+| Method | Route | Auth | Purpose |
+|---|---|---|---|
+| GET | `/health` | Public | Returns `{ status: "ok", service: "SACRMS API" }` |
+| POST | `/auth/login` | Public | Verifies email/password and returns JWT/user |
 
-frontend/src/components/layout/Sidebar.tsx
-  Role-filtered navigation and alert badge.
+### Camps
 
-frontend/src/components/dashboard/DashboardView.tsx
-  Main operational readiness dashboard.
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| POST | `/camps` | Admin + multipart | Creates camp, uploads optional profile image, creates Logistics leader |
+| GET | `/camps` | Authenticated | Admin sees all; other users see assigned camp |
+| PATCH | `/camps/:id/settings` | Authenticated | Admin edits any camp; Logistics edits own camp settings |
+| DELETE | `/camps/:id` | Admin | Deletes camp and related users/resources/records/equipment/tasks/requests |
 
-frontend/src/components/camps/CampsView.tsx
-  Camp overview and camp details.
+Camp deletion also removes locally stored uploaded profile images when the path is under the SACRMS uploads directory.
 
-frontend/src/components/alerts/AlertsView.tsx
-  Alert list, acknowledgement, and resupply actions.
+### Resources
 
-frontend/src/components/equipment/EquipmentView.tsx
-  Equipment status and asset operations.
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| GET | `/resources?campId=...` | Authenticated | Reads a camp's resources; Admin supplies camp ID |
+| POST | `/resources` | Admin or Logistics | Creates a resource in the permitted camp |
+| PATCH | `/resources/:id` | Admin or Logistics | Updates a resource after camp-scope validation |
+| DELETE | `/resources/:id` | Admin or Logistics | Deletes a resource after camp-scope validation |
 
-frontend/src/components/maintenance/MaintenanceView.tsx
-  Maintenance task and work-order operations.
+If a camp has no resources, `GET /resources` creates starter resources for that camp.
 
-frontend/src/components/consumption/ConsumptionView.tsx
-  Consumption history and analytics.
+### Consumption
 
-frontend/src/components/consumption/ConsumptionView.tsx
-  Consumption history and analytics.
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| GET | `/consumption?campId=...` | Authenticated | Reads consumption for an allowed camp |
+| POST | `/consumption` | Admin or Logistics | Creates a validated consumption record |
 
-frontend/src/components/reports/ReportsView.tsx
-  Reports and operational summaries.
+### Supply requests
 
-frontend/src/components/users/UsersView.tsx
-  Displays the four active demo identities; it does not switch accounts.
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| POST | `/requests` | Logistics | Creates a request using a resource belonging to the user's camp |
+| GET | `/requests` | Authenticated | Admin sees all; Logistics is filtered to its camp |
+| PATCH | `/requests/:id/status` | Authenticated | Applies the allowed approval, rejection, dispatch, or receipt transition |
 
-frontend/src/components/settings/SettingsView.tsx
-  Application settings.
+### Equipment
 
-frontend/src/components/modals/
-  Add resource, quick restock, dispatch, help, apps drawer, and toast components.
-```
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| GET | `/equipment?campId=...` | Authenticated | Reads all or selected-camp equipment |
+| POST | `/equipment` | Admin, Logistics, Maintenance, Maintenance Supervisor | Creates equipment in the permitted camp |
+| PATCH | `/equipment/:id` | Admin, Maintenance, Maintenance Supervisor | Updates equipment after scope validation |
 
-## 11. Current Demo Data Caveats
+### Maintenance
 
-- Camp Alpha is labeled `Live`, Camp Bravo is `Live`, Camp Charlie is `Reserve`, and Camp Delta exists in seed data but has no active login identity.
-- The HQ Admin currently has `campId: camp-alpha`, so the current prototype treats Camp Alpha inventory as central source stock. A production design should introduce a distinct HQ warehouse/depot instead of using a camp as the source.
-- The seed request is a Camp Bravo Diesel Fuel request for 8,000 L. Camp Bravo starts with 6,500 L of diesel, while Camp Alpha has 12,000 L of Diesel Fuel. The HQ source therefore needs the matching Camp Alpha diesel resource for dispatch.
-- Dispatch is currently represented as immediate stock deduction at HQ and `In Transit` status. There is no real carrier integration or live GPS tracking.
-- Browser prompts are used for carrier, ETA, and rejection reason. These should become application modals for production-quality validation and accessibility.
-- The API uses bcrypt password hashes and JWTs. The old React demo authentication remains client-side until the frontend migration is completed. Never use the demo passwords or development JWT fallback in production.
-- Multiple browser tabs do not have robust cross-tab conflict handling.
-- There are no automated unit or end-to-end tests yet.
+| Method | Route | Auth/role | Purpose |
+|---|---|---|---|
+| GET | `/maintenance?campId=...` | Authenticated | Reads maintenance tasks |
+| POST | `/maintenance` | Admin, Logistics, Maintenance, Maintenance Supervisor | Creates a task |
+| PATCH | `/maintenance/:id` | Admin, Logistics, Maintenance, Maintenance Supervisor | Updates a task after scope validation |
 
-## 12. Recommended Future Improvements
+## 14. MongoDB models
 
-Prioritize these changes before treating the application as production-ready:
+All schemas are in `server/models/models.ts`.
 
-1. Add a real backend, database, server-side authentication, and authorization.
-2. Add a distinct HQ warehouse/depot entity and source inventory model.
-3. Add exact resource identity by SKU or resource ID to every request instead of relying mainly on typed resource name.
-4. Replace browser prompts with accessible React modals and form validation.
-5. Add request delivery timeline, notification center, and audit history view.
-6. Add optimistic update protection and transaction handling for dispatch/receipt.
-7. Add tests for permissions and the full request lifecycle.
-8. Add validation for units, negative values, zero quantities, max capacity, and duplicate submissions.
-9. Add cross-tab synchronization or server events for new HQ requests.
-10. Improve reset/demo data controls and migration handling for old `localStorage` data.
+| Model | Important fields |
+|---|---|
+| `User` | name, email, passwordHash, role, campId, rank, serviceId |
+| `Camp` | name, type, code, personnel, location, commander, profileImage, weather, temperature, status, thresholds, alert settings |
+| `Resource` | campId, name, SKU, category, stock, unit, min/max levels, burn rate, location |
+| `Consumption` | campId, resourceName, category, date, quantity, headcount, purpose, unit, recordedBy |
+| `SupplyRequest` | campId, requestedBy, resourceId, resourceName, category, quantity, unit, urgency, reason, status, carrier, ETA, receipt/rejection fields |
+| `Equipment` | campId, name, serialNumber, category, model, status, healthScore, operatingHours, location, maintenance dates |
+| `MaintenanceTask` | campId, equipmentId, title, priority, status, assignedTo, dueDate, description |
+| `AuditLog` | actorId, action, entityType, entityId, details |
 
-## 13. Backend Setup
+All schemas use Mongoose timestamps. Object references use `Camp`, `User`, `Resource`, and `Equipment` refs as defined in the schema.
 
-Copy `server/.env.example` to `.env` and add a MongoDB Atlas connection string plus a long random JWT secret:
+## 15. Authorization and audit behavior
 
-```text
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=...
-CLIENT_ORIGIN=http://localhost:3000
-```
+`server/middleware/auth.ts`:
 
-Then run:
+1. reads the bearer token from `Authorization`;
+2. verifies it with `JWT_SECRET`;
+3. loads the user from MongoDB;
+4. attaches `{ id, role, campId }` to `req.user`;
+5. returns `401` for missing, invalid, expired, or deleted-user sessions.
 
-```bash
-npm run server:seed
-npm run server
-```
+`requireRole()` returns `403` when the authenticated user's role is not allowed.
 
-The API listens on `http://localhost:4000`. Vite proxies `/api` requests to that server during development.
+The `audit()` helper records actor, action, entity type, entity ID, and optional details. Important actions include camp/resource/equipment/maintenance creation and updates, consumption recording, request approval/rejection/dispatch/receipt, and camp settings changes.
 
-The remaining integration task is to replace local `AppContext` reads and mutations with an authenticated API client, while retaining the existing UI and role-scoped behavior.
+## 16. Client persistence
 
-## 14. Instructions for Any AI Modifying This Project
+Server data is the primary source when the API is available. Browser storage currently supports session/UI behavior:
+
+| Storage | Key | Purpose |
+|---|---|---|
+| `sessionStorage` | `sacrms_token` | JWT |
+| `sessionStorage` | `sacrms_user` | Last authenticated profile for the active browser session |
+| `localStorage` | `sacrms_theme` | `plain` or `army` theme |
+| `localStorage` | `sacrms_selected_camp` | Admin's selected camp |
+| `localStorage` | `sacrms-active-view` | Last active navigation view |
+| `localStorage` | `sacrms_pending_requests` | Pending-request overlay queue used by the frontend |
+| `localStorage` | `sacrms_acknowledged_alerts_<userId>` | Per-user alert acknowledgement IDs |
+
+`resetAllData()` clears frontend state and legacy/demo storage keys. It does not delete MongoDB records. Database deletion must be performed through the API or database tooling.
+
+## 17. Current data and deployment caveats
+
+- `frontend/src/data/mockData.ts` is now mostly empty and contains only an Admin demo profile; it is not a complete production seed.
+- `server/seed.ts` is destructive for `User`, `Resource`, `Consumption`, and `Camp` collections. It does not clear every model and creates only the HQ Admin.
+- The current Admin seed has `campId: null`. Admin endpoints can select camps through query parameters or the UI once camps exist.
+- The backend has no separate HQ warehouse entity. Dispatch therefore authorizes shipment but does not deduct source stock.
+- The frontend and backend are not yet a single fully consistent implementation of dispatch/source inventory.
+- `SupplyRequest`, `Equipment`, and other Mongoose models are created without explicit TypeScript document interfaces. Preserve current behavior carefully when improving typing.
+- Browser prompts remain in parts of the UI for rejection reason, carrier, or ETA; accessible React modals would be better.
+- There is no automated unit, integration, or end-to-end test suite in the repository.
+- There is no transaction protecting multi-document stock/request changes.
+- The API accepts several free-form strings and uses limited request validation. Production validation should be strengthened.
+- There is no refresh-token/revocation workflow; the JWT lifetime is eight hours.
+- Local uploads are not a durable object-storage solution for deployment.
+- MongoDB connection, CORS, and error handling need production hardening before real operational use.
+
+## 18. Recommended implementation priorities
+
+1. Add a distinct HQ warehouse/depot and warehouse inventory model.
+2. Make frontend and backend supply-request stock movement use the same transaction and rules.
+3. Add explicit TypeScript interfaces for Mongoose documents and API DTOs.
+4. Add schema validation for every API body, preferably with a shared validation library.
+5. Add MongoDB transactions for dispatch, receipt, and related stock mutations.
+6. Replace browser prompts with accessible, validated React modals.
+7. Add request timeline/history and an audit-log view.
+8. Add automated tests for auth, camp isolation, role permissions, inventory boundaries, and every request transition.
+9. Add seed data for camps, logistics users, resources, equipment, maintenance, and realistic demo requests.
+10. Add pagination, indexes, rate limiting, structured logging, secure headers, and production secret enforcement.
+11. Add upload type/size validation, persistent storage, and safer file naming/deletion.
+12. Add an API client layer or query library if the number of server-backed screens grows.
+
+## 19. Guidance for AI assistants
 
 Before editing:
 
-- Read this file, `README.md`, `frontend/src/types/index.ts`, and the relevant component/context file.
-- Preserve the HQ-to-camp workflow and the four active login identities unless the user explicitly changes the business rules.
-- Check role authorization before adding or changing an action.
-- Keep camp data scoped for camp users.
-- Do not make dispatch deduct from the requesting camp; dispatch deducts from the configured source stock, and receipt adds to the destination camp.
-- When changing inventory, update stock, status, and `estDays` together.
-- Keep pending HQ requests persistent until an actual request status action resolves them.
-- Preserve `localStorage` compatibility unless a migration is intentionally added.
-- Do not add production claims to documentation while authentication and persistence remain client-side.
-- After edits, run `npm run lint` and `npm run build`.
+1. Read this file and `README.md`.
+2. Read `frontend/src/types/index.ts`.
+3. Read the relevant component and `frontend/src/context/AppContext.tsx`.
+4. For API work, read `server/index.ts`, `server/middleware/auth.ts`, and `server/models/models.ts`.
+5. Check whether the behavior is frontend-only, backend-only, or an integration behavior.
 
-## 15. Definition of Correct Diesel Request Behavior
+When changing behavior:
 
-A correct diesel test should work like this:
+- Preserve camp isolation for non-Admin users.
+- Repeat authorization checks on the server; never rely on hidden navigation.
+- Keep resource stock, status, and runway calculations synchronized.
+- Keep request status transitions explicit and reject invalid transitions.
+- Do not claim that the UI is server-persistent if the changed path still uses local state.
+- Do not assume fixed logistics credentials; camp creation generates the leader password.
+- Do not use real military, student, or personnel data in fixtures or screenshots.
+- Avoid changing storage keys without a migration or compatibility plan.
+- Surface API failures to the user through the existing toast/error pattern.
+- Keep API and frontend DTO changes synchronized.
 
-1. Log in as Camp Bravo.
-2. Open Supply Requests.
-3. Submit a Diesel Fuel request with a valid quantity.
-4. Sign out.
-5. Log in as HQ Admin.
-6. Confirm the HQ requirement popup appears.
-7. Open the request queue and approve the request.
-8. Dispatch it with carrier and ETA.
-9. Confirm HQ source Diesel Fuel stock decreases by the request quantity.
-10. Confirm the request becomes `In Transit` and records source resource, carrier, ETA, actor, and audit history.
-11. Sign out.
-12. Log in as Camp Bravo.
-13. Confirm only Camp Bravo sees the request and the Confirm Received action.
-14. Confirm receipt.
-15. Confirm Camp Bravo Diesel Fuel stock increases by the request quantity, capped at max capacity.
-16. Confirm the request becomes `Received`, records the receipt timestamp, and disappears from the persistent HQ pending queue.
+After code changes:
 
-If any step fails, inspect `frontend/src/context/AppContext.tsx` first, then `frontend/src/components/requests/SupplyRequestsView.tsx` and `frontend/src/App.tsx`.
+```bash
+npm run lint
+npm run build
+```
+
+For request or authentication changes, also run the server against a safe development database and manually verify:
+
+```text
+health -> login -> camp scope -> resource read/write -> request transition -> audit record
+```
+
+## 20. Suggested demonstration flow
+
+For a product demo or animated video, use fake data and show:
+
+1. Admin login.
+2. Camp overview and readiness dashboard.
+3. Resource inventory with warning/critical stock.
+4. Camp Logistics login and scoped inventory.
+5. Consumption entry and updated analytics.
+6. Supply request submission.
+7. Admin approval and dispatch.
+8. Camp receipt confirmation.
+9. Equipment and maintenance status.
+10. Alerts, reports, settings, and audit history.
+
+Explain the architecture accurately:
+
+```text
+React/Vite UI
+      -> Express API
+      -> JWT authentication and role/camp authorization
+      -> Mongoose models
+      -> MongoDB
+      -> AuditLog records
+```
+
+Do not present the current system as having live GPS, real carrier integration, a separate HQ warehouse, or production-grade military security; those are future capabilities unless implemented explicitly.
