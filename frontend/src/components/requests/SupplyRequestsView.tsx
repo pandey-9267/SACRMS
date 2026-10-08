@@ -46,7 +46,7 @@ export const SupplyRequestsView: React.FC = () => {
     useState('');
 
 const [quantity, setQuantity] =
-  useState('1000');
+  useState('');
 
   const [unit, setUnit] =
     useState('L');
@@ -172,7 +172,7 @@ await submitSupplyRequest({
       resourceName:
         selectedResource.name,
 
-      quantity,
+      quantity: numericQuantity,
 
       unit:
         selectedResource.unit,
